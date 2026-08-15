@@ -1,0 +1,1114 @@
+Truck Repair Shop Management System — Complete User Flow
+ Main Users
+For the current version, there are mainly two sides:
+1. Shop Owner
+The owner uses the system to:
+•	Manage customers 
+•	Manage trucks/vehicles 
+•	Create repair invoices 
+•	Manage parts and inventory 
+•	Manage vendors 
+•	Receive payments 
+•	Send invoices 
+•	Track expenses 
+•	Reconcile bank transactions 
+•	View profit and reports 
+2. Customer
+The customer doesn't necessarily need an account in the app.
+They receive an invoice link and can:
+•	View the invoice 
+•	See balance 
+•	View payment history 
+•	Make payment 
+•	Download invoice/receipt 
+•	Approve an estimate when applicable 
+
+EVENT 1 : Owner Creates His Shop Profile
+User Story
+As a shop owner, I want to create my shop profile so that my business information automatically appears on invoices and customer communications.
+Owner enters:
+•	Shop name 
+•	Business address 
+•	Phone number 
+•	Email 
+•	Website 
+•	Logo 
+•	Tax information 
+•	Default tax rate 
+•	Default payment terms 
+•	Credit-card processing fee 
+•	Invoice settings 
+Example:
+ABC Truck Repair
+
+123 Main Street
+Houston, TX
+
+Phone: 555-1234
+Email: abc@truckrepair.com
+
+Default Tax: 8.25%
+Credit Card Fee: 3%
+________________________________________
+EVENT 2 — Owner Logs Into the System
+User Story
+As the owner, I want to securely log in so that only authorized people can access my business information.
+Owner:
+Email
+Password
+      ↓
+Login
+      ↓
+Dashboard
+________________________________________
+EVENT 3 — Owner Creates a Customer
+A truck arrives at the shop.
+The owner needs to record who owns the truck.
+User Story
+As the owner, I want to create a customer record so that I can keep their contact, billing, and business information.
+Owner enters:
+•	Company 
+•	Contact person 
+•	Phone 
+•	Email 
+•	Billing address 
+•	Service address 
+•	USDOT 
+•	MC number 
+•	EIN 
+•	Customer type 
+•	Payment terms 
+•	Notes 
+Example:
+ABC Trucking LLC
+John Smith
+555-1234
+john@abctrucking.com
+Payment Terms:
+Net 30
+Customer Type:
+Fleet
+________________________________________
+EVENT 4 — Owner Adds Customer's Truck
+Now the owner needs to know which vehicle is being repaired.
+User Story
+As the owner, I want to add the customer's vehicle so that repair work can be connected to a specific truck.
+Owner enters:
+•	Unit number 
+•	VIN 
+•	Year 
+•	Make 
+•	Model 
+•	Engine 
+•	Transmission 
+•	License plate 
+•	Mileage 
+•	Equipment type 
+The owner can:
+Scan VIN
+or enter it manually.
+The system:
+•	Validates VIN 
+•	Checks whether VIN already exists 
+•	Warns about duplicates 
+
+EVENT 5 — Customer Brings Truck for Repair
+Now the actual repair job begins.
+Example:
+ABC Trucking brings Unit #101 because the brakes need repair.
+Owner searches:
+ABC Trucking
+      ↓
+Unit #101
+      ↓
+Create Repair Invoice
+________________________________________
+EVENT 6 — Owner Creates Invoice
+User Story
+As the owner, I want to create an invoice for the customer's repair so that I can record the work and charge the customer.
+Invoice gets a unique number:
+Invoice #INV-1001
+It contains:
+•	Customer 
+•	Vehicle 
+•	Date 
+•	Due date 
+•	Payment terms 
+________________________________________
+EVENT 7 — Owner Adds Labor
+Owner records the work performed.
+Example:
+Brake Repair
+
+Labor:
+4 hours
+
+Rate:
+$100/hour
+
+Total:
+$400
+Optional:
+•	Technician 
+•	Notes 
+•	Warranty information 
+System automatically calculates:
+4 × $100 = $400
+________________________________________
+EVENT 8 — Owner Adds Parts
+Owner searches inventory.
+Example:
+Brake Pad
+Part #: BP-100
+System shows:
+Purchase Cost: $80
+Selling Price: $120
+Stock: 10
+Owner adds:
+Quantity: 2
+System calculates:
+2 × $120 = $240
+________________________________________
+EVENT 9 — Inventory Updates
+When the invoice is completed:
+Before:
+Brake Pads = 10
+
+Used:
+2
+
+After:
+Brake Pads = 8
+The system automatically deducts the parts.
+If stock gets low:
+⚠️ Low Inventory
+________________________________________
+EVENT 10 — Invoice Calculates Total
+The system calculates:
+Labor             $400
+Parts             $240
+-----------------------
+Subtotal          $640
+Tax                $XX
+-----------------------
+Invoice Total     $XXX
+Owner doesn't manually calculate anything.
+________________________________________
+EVENT 11 — Owner Reviews Invoice
+Before closing/sending:
+Owner checks:
+•	Customer 
+•	Vehicle 
+•	Labor 
+•	Parts 
+•	Tax 
+•	Total 
+•	Payment terms 
+•	Warranty/return messages 
+Then:
+Preview Invoice
+________________________________________
+EVENT 12 — Owner Sends Invoice
+User Story
+As the owner, I want to send the invoice to the customer so that the customer can review and pay it.
+Owner can send:
+•	Email 
+•	Text 
+•	Online invoice link 
+•	PDF 
+•	PDF + link 
+Example message:
+Your invoice #INV-1001 is ready. Current balance is $640. You can review and pay using the link below.
+________________________________________
+EVENT 13 — Customer Opens Invoice
+Customer receives the link.
+They see:
+ABC Truck Repair
+
+Invoice #INV-1001
+
+Vehicle:
+Unit #101
+
+Labor          $400
+Parts          $240
+
+Total          $640
+Paid             $0
+Balance        $640
+
+[ PAY NOW ]
+The customer doesn't need a full app account.
+________________________________________
+EVENT 14 — Customer Makes Payment
+Customer chooses a payment method.
+Possible methods:
+•	Credit card 
+•	Debit card 
+•	ACH 
+•	Zelle 
+•	Cash 
+•	Check 
+•	EFS/Comchek 
+•	Other 
+For online card payment, a payment processor would actually process the card transaction.
+________________________________________
+EVENT 15 — Split Payment
+Customer could pay:
+Cash          $200
+Credit Card   $300
+Zelle         $140
+-------------------
+Total Paid    $640
+System records each payment separately.
+________________________________________
+EVENT 16 — Credit Card Fee
+If credit card payment is $300:
+Credit Card Payment = $300
+
+Fee = 3%
+
+Fee = $9
+The system adds the applicable fee according to the shop's settings.
+________________________________________
+EVENT 17 — Payment Status Updates
+Partial payment
+If customer pays $300:
+Invoice Total       $640
+Paid                $300
+Remaining           $340
+
+Status:
+PARTIALLY PAID
+Full payment
+Customer later pays $340:
+Invoice Total       $640
+Paid                $640
+Remaining             $0
+
+Status:
+PAID
+The same invoice link now shows:
+PAID
+
+Balance: $0.00
+________________________________________
+EVENT 18 — Invoice Is Closed
+User Story
+As the owner, I want to close an invoice so that completed invoices cannot accidentally be changed.
+When closed:
+•	Invoice becomes locked 
+•	Payment history is saved 
+•	Customer balance updates 
+•	Inventory updates 
+•	Financial reports update 
+•	Closing user is recorded 
+•	Date/time is recorded 
+If changes are required later:
+Manager/Owner authorization required.
+________________________________________
+EVENT 19 — Customer Receives Paid Receipt
+After payment, owner can send:
+•	Paid invoice 
+•	Receipt 
+•	Updated PDF 
+•	Payment confirmation 
+The PDF shows:
+Invoice Total: $640
+Amount Paid:   $640
+Balance:         $0
+
+STATUS: PAID
+________________________________________
+EVENT 20 — Vendor Purchase
+Separately, the owner buys parts.
+Example:
+Vendor:
+ABC Parts Supplier
+
+10 Brake Pads
+
+Purchase Cost:
+$80 each
+
+Total:
+$800
+Owner records the purchase.
+Inventory increases:
+Before: 8
+Purchased: 10
+After: 18
+Vendor balance is also updated if purchased on credit.
+________________________________________
+EVENT 21 — Vendor Expense
+The owner may have other business expenses:
+•	Rent 
+•	Fuel 
+•	Insurance 
+•	Payroll 
+•	Utilities 
+•	Equipment 
+•	Advertising 
+•	Bank fees 
+•	Taxes 
+The owner records these as expenses.
+________________________________________
+EVENT 22 — Bank Statement Import
+At some point, the owner uploads a bank statement.
+Example:
+Bank Statement
+August 1 – August 31
+
+[Upload CSV]
+[Upload Excel]
+[Upload PDF]
+System imports transactions:
+Date       Description       Amount
+
+Aug 10     ABC Trucking      +$640
+Aug 11     ABC Parts         -$800
+Aug 12     Insurance         -$500
+________________________________________
+EVENT 23 — Bank Transaction Matching
+The system looks for possible matches.
+Example:
+Bank Deposit
++$640
+
+Possible match:
+
+Invoice #INV-1001
+ABC Trucking
+$640
+Owner presses:
+MATCH
+The system connects the bank transaction to the payment.
+________________________________________
+EVENT 24 — Accounts Receivable
+The owner wants to know:
+Who still owes me money?
+System shows:
+ABC Trucking       $340
+XYZ Logistics      $1,200
+John Transport     $500
+
+Total Outstanding:
+$2,040
+________________________________________
+EVENT 25 — Accounts Payable
+The owner wants to know:
+Who do I owe money to?
+System shows:
+ABC Parts          $800
+XYZ Tires          $450
+
+Total Payable:
+$1,250
+________________________________________
+EVENT 26 — Financial Dashboard
+Now the owner opens the dashboard.
+System summarizes the business:
+TODAY
+
+Sales                 $4,500
+Cash Collected        $3,200
+Outstanding           $2,100
+Vendor Payables       $1,400
+
+Gross Profit          $2,100
+Operating Expenses      $800
+
+NET PROFIT            $1,300
+________________________________________
+EVENT 27 — Profit & Loss
+The owner can view:
+Income
+Labor Sales
+Parts Sales
+Other Services
+COGS
+Parts Cost
+Outside Labor
+Freight
+Gross Profit
+Income - COGS
+Expenses
+Rent
+Payroll
+Fuel
+Insurance
+Utilities
+etc.
+Net Profit
+Gross Profit - Expenses
+________________________________________
+EVENT 28 — Owner Views Reports
+Owner can generate:
+Sales
+•	Daily 
+•	Weekly 
+•	Monthly 
+•	Yearly 
+Profit
+•	P&L 
+•	Gross profit 
+•	Net profit 
+Customers
+•	Customer balances 
+•	Customer profitability 
+Vehicles
+•	Profit by vehicle 
+Parts
+•	Parts sales 
+•	Parts profit 
+Vendors
+•	Vendor expenses 
+•	Vendor balances 
+Payments
+•	Payment history 
+•	Unmatched transactions 
+
+EVENT 29 — Customer Returns Later
+The same customer comes back.
+Owner searches:
+ABC Trucking
+Immediately sees:
+Customer
+   ↓
+Vehicles
+   ↓
+Previous Invoices
+   ↓
+Payment History
+   ↓
+Outstanding Balance
+Then creates another invoice.
+The cycle starts again.
+________________________________________
+🔄 THE COMPLETE SYSTEM IN ONE FLOW
+This is the part I want you to remember:
+OWNER SETUP
+    ↓
+SHOP PROFILE
+    ↓
+CUSTOMER CREATED
+    ↓
+CUSTOMER VEHICLE ADDED
+    ↓
+TRUCK COMES FOR REPAIR
+    ↓
+CREATE INVOICE
+    ↓
+ADD LABOR
+    ↓
+ADD PARTS
+    ↓
+INVENTORY DEDUCTION
+    ↓
+CALCULATE TAX + TOTAL
+    ↓
+REVIEW INVOICE
+    ↓
+SEND INVOICE
+    ↓
+CUSTOMER OPENS ONLINE INVOICE
+    ↓
+CUSTOMER PAYS
+    ↓
+PAYMENT RECORDED
+    ↓
+BALANCE UPDATED
+    ↓
+INVOICE CLOSED
+    ↓
+PAID RECEIPT SENT
+    ↓
+BANK TRANSACTION IMPORTED
+    ↓
+PAYMENT MATCHED
+    ↓
+CUSTOMER AR UPDATED
+    ↓
+VENDOR EXPENSES RECORDED
+    ↓
+AP UPDATED
+    ↓
+PROFIT CALCULATED
+    ↓
+DASHBOARD UPDATED
+    ↓
+REPORTS GENERATED
+🧠 So what is the actual purpose?
+The owner should be able to open one app and answer these questions:
+Who are my customers?
+Which trucks do they have?
+What work did I perform?
+What parts did I use?
+How much did I charge?
+Has the customer paid?
+Who still owes me?
+What parts do I have?
+What did I buy from vendors?
+What bills do I owe?
+How much money came into the business?
+How much did I spend?
+How much profit did I make?
+That's the system
+
+Truck Repair Shop Management System — Complete User Flow
+ Main Users
+For the current version, there are mainly two sides:
+1. Shop Owner
+The owner uses the system to:
+•	Manage customers 
+•	Manage trucks/vehicles 
+•	Create repair invoices 
+•	Manage parts and inventory 
+•	Manage vendors 
+•	Receive payments 
+•	Send invoices 
+•	Track expenses 
+•	Reconcile bank transactions 
+•	View profit and reports 
+2. Customer
+The customer doesn't necessarily need an account in the app.
+They receive an invoice link and can:
+•	View the invoice 
+•	See balance 
+•	View payment history 
+•	Make payment 
+•	Download invoice/receipt 
+•	Approve an estimate when applicable 
+
+EVENT 1 : Owner Creates His Shop Profile
+User Story
+As a shop owner, I want to create my shop profile so that my business information automatically appears on invoices and customer communications.
+Owner enters:
+•	Shop name 
+•	Business address 
+•	Phone number 
+•	Email 
+•	Website 
+•	Logo 
+•	Tax information 
+•	Default tax rate 
+•	Default payment terms 
+•	Credit-card processing fee 
+•	Invoice settings 
+Example:
+ABC Truck Repair
+
+123 Main Street
+Houston, TX
+
+Phone: 555-1234
+Email: abc@truckrepair.com
+
+Default Tax: 8.25%
+Credit Card Fee: 3%
+________________________________________
+EVENT 2 — Owner Logs Into the System
+User Story
+As the owner, I want to securely log in so that only authorized people can access my business information.
+Owner:
+Email
+Password
+      ↓
+Login
+      ↓
+Dashboard
+________________________________________
+EVENT 3 — Owner Creates a Customer
+A truck arrives at the shop.
+The owner needs to record who owns the truck.
+User Story
+As the owner, I want to create a customer record so that I can keep their contact, billing, and business information.
+Owner enters:
+•	Company 
+•	Contact person 
+•	Phone 
+•	Email 
+•	Billing address 
+•	Service address 
+•	USDOT 
+•	MC number 
+•	EIN 
+•	Customer type 
+•	Payment terms 
+•	Notes 
+Example:
+ABC Trucking LLC
+John Smith
+555-1234
+john@abctrucking.com
+Payment Terms:
+Net 30
+Customer Type:
+Fleet
+________________________________________
+EVENT 4 — Owner Adds Customer's Truck
+Now the owner needs to know which vehicle is being repaired.
+User Story
+As the owner, I want to add the customer's vehicle so that repair work can be connected to a specific truck.
+Owner enters:
+•	Unit number 
+•	VIN 
+•	Year 
+•	Make 
+•	Model 
+•	Engine 
+•	Transmission 
+•	License plate 
+•	Mileage 
+•	Equipment type 
+The owner can:
+Scan VIN
+or enter it manually.
+The system:
+•	Validates VIN 
+•	Checks whether VIN already exists 
+•	Warns about duplicates 
+
+EVENT 5 — Customer Brings Truck for Repair
+Now the actual repair job begins.
+Example:
+ABC Trucking brings Unit #101 because the brakes need repair.
+Owner searches:
+ABC Trucking
+      ↓
+Unit #101
+      ↓
+Create Repair Invoice
+________________________________________
+EVENT 6 — Owner Creates Invoice
+User Story
+As the owner, I want to create an invoice for the customer's repair so that I can record the work and charge the customer.
+Invoice gets a unique number:
+Invoice #INV-1001
+It contains:
+•	Customer 
+•	Vehicle 
+•	Date 
+•	Due date 
+•	Payment terms 
+________________________________________
+EVENT 7 — Owner Adds Labor
+Owner records the work performed.
+Example:
+Brake Repair
+
+Labor:
+4 hours
+
+Rate:
+$100/hour
+
+Total:
+$400
+Optional:
+•	Technician 
+•	Notes 
+•	Warranty information 
+System automatically calculates:
+4 × $100 = $400
+________________________________________
+EVENT 8 — Owner Adds Parts
+Owner searches inventory.
+Example:
+Brake Pad
+Part #: BP-100
+System shows:
+Purchase Cost: $80
+Selling Price: $120
+Stock: 10
+Owner adds:
+Quantity: 2
+System calculates:
+2 × $120 = $240
+________________________________________
+EVENT 9 — Inventory Updates
+When the invoice is completed:
+Before:
+Brake Pads = 10
+
+Used:
+2
+
+After:
+Brake Pads = 8
+The system automatically deducts the parts.
+If stock gets low:
+⚠️ Low Inventory
+________________________________________
+EVENT 10 — Invoice Calculates Total
+The system calculates:
+Labor             $400
+Parts             $240
+-----------------------
+Subtotal          $640
+Tax                $XX
+-----------------------
+Invoice Total     $XXX
+Owner doesn't manually calculate anything.
+________________________________________
+EVENT 11 — Owner Reviews Invoice
+Before closing/sending:
+Owner checks:
+•	Customer 
+•	Vehicle 
+•	Labor 
+•	Parts 
+•	Tax 
+•	Total 
+•	Payment terms 
+•	Warranty/return messages 
+Then:
+Preview Invoice
+________________________________________
+EVENT 12 — Owner Sends Invoice
+User Story
+As the owner, I want to send the invoice to the customer so that the customer can review and pay it.
+Owner can send:
+•	Email 
+•	Text 
+•	Online invoice link 
+•	PDF 
+•	PDF + link 
+Example message:
+Your invoice #INV-1001 is ready. Current balance is $640. You can review and pay using the link below.
+________________________________________
+EVENT 13 — Customer Opens Invoice
+Customer receives the link.
+They see:
+ABC Truck Repair
+
+Invoice #INV-1001
+
+Vehicle:
+Unit #101
+
+Labor          $400
+Parts          $240
+
+Total          $640
+Paid             $0
+Balance        $640
+
+[ PAY NOW ]
+The customer doesn't need a full app account.
+________________________________________
+EVENT 14 — Customer Makes Payment
+Customer chooses a payment method.
+Possible methods:
+•	Credit card 
+•	Debit card 
+•	ACH 
+•	Zelle 
+•	Cash 
+•	Check 
+•	EFS/Comchek 
+•	Other 
+For online card payment, a payment processor would actually process the card transaction.
+________________________________________
+EVENT 15 — Split Payment
+Customer could pay:
+Cash          $200
+Credit Card   $300
+Zelle         $140
+-------------------
+Total Paid    $640
+System records each payment separately.
+________________________________________
+EVENT 16 — Credit Card Fee
+If credit card payment is $300:
+Credit Card Payment = $300
+
+Fee = 3%
+
+Fee = $9
+The system adds the applicable fee according to the shop's settings.
+________________________________________
+EVENT 17 — Payment Status Updates
+Partial payment
+If customer pays $300:
+Invoice Total       $640
+Paid                $300
+Remaining           $340
+
+Status:
+PARTIALLY PAID
+Full payment
+Customer later pays $340:
+Invoice Total       $640
+Paid                $640
+Remaining             $0
+
+Status:
+PAID
+The same invoice link now shows:
+PAID
+
+Balance: $0.00
+________________________________________
+EVENT 18 — Invoice Is Closed
+User Story
+As the owner, I want to close an invoice so that completed invoices cannot accidentally be changed.
+When closed:
+•	Invoice becomes locked 
+•	Payment history is saved 
+•	Customer balance updates 
+•	Inventory updates 
+•	Financial reports update 
+•	Closing user is recorded 
+•	Date/time is recorded 
+If changes are required later:
+Manager/Owner authorization required.
+________________________________________
+EVENT 19 — Customer Receives Paid Receipt
+After payment, owner can send:
+•	Paid invoice 
+•	Receipt 
+•	Updated PDF 
+•	Payment confirmation 
+The PDF shows:
+Invoice Total: $640
+Amount Paid:   $640
+Balance:         $0
+
+STATUS: PAID
+________________________________________
+EVENT 20 — Vendor Purchase
+Separately, the owner buys parts.
+Example:
+Vendor:
+ABC Parts Supplier
+
+10 Brake Pads
+
+Purchase Cost:
+$80 each
+
+Total:
+$800
+Owner records the purchase.
+Inventory increases:
+Before: 8
+Purchased: 10
+After: 18
+Vendor balance is also updated if purchased on credit.
+________________________________________
+EVENT 21 — Vendor Expense
+The owner may have other business expenses:
+•	Rent 
+•	Fuel 
+•	Insurance 
+•	Payroll 
+•	Utilities 
+•	Equipment 
+•	Advertising 
+•	Bank fees 
+•	Taxes 
+The owner records these as expenses.
+________________________________________
+EVENT 22 — Bank Statement Import
+At some point, the owner uploads a bank statement.
+Example:
+Bank Statement
+August 1 – August 31
+
+[Upload CSV]
+[Upload Excel]
+[Upload PDF]
+System imports transactions:
+Date       Description       Amount
+
+Aug 10     ABC Trucking      +$640
+Aug 11     ABC Parts         -$800
+Aug 12     Insurance         -$500
+________________________________________
+EVENT 23 — Bank Transaction Matching
+The system looks for possible matches.
+Example:
+Bank Deposit
++$640
+
+Possible match:
+
+Invoice #INV-1001
+ABC Trucking
+$640
+Owner presses:
+MATCH
+The system connects the bank transaction to the payment.
+________________________________________
+EVENT 24 — Accounts Receivable
+The owner wants to know:
+Who still owes me money?
+System shows:
+ABC Trucking       $340
+XYZ Logistics      $1,200
+John Transport     $500
+
+Total Outstanding:
+$2,040
+________________________________________
+EVENT 25 — Accounts Payable
+The owner wants to know:
+Who do I owe money to?
+System shows:
+ABC Parts          $800
+XYZ Tires          $450
+
+Total Payable:
+$1,250
+________________________________________
+EVENT 26 — Financial Dashboard
+Now the owner opens the dashboard.
+System summarizes the business:
+TODAY
+
+Sales                 $4,500
+Cash Collected        $3,200
+Outstanding           $2,100
+Vendor Payables       $1,400
+
+Gross Profit          $2,100
+Operating Expenses      $800
+
+NET PROFIT            $1,300
+________________________________________
+EVENT 27 — Profit & Loss
+The owner can view:
+Income
+Labor Sales
+Parts Sales
+Other Services
+COGS
+Parts Cost
+Outside Labor
+Freight
+Gross Profit
+Income - COGS
+Expenses
+Rent
+Payroll
+Fuel
+Insurance
+Utilities
+etc.
+Net Profit
+Gross Profit - Expenses
+________________________________________
+EVENT 28 — Owner Views Reports
+Owner can generate:
+Sales
+•	Daily 
+•	Weekly 
+•	Monthly 
+•	Yearly 
+Profit
+•	P&L 
+•	Gross profit 
+•	Net profit 
+Customers
+•	Customer balances 
+•	Customer profitability 
+Vehicles
+•	Profit by vehicle 
+Parts
+•	Parts sales 
+•	Parts profit 
+Vendors
+•	Vendor expenses 
+•	Vendor balances 
+Payments
+•	Payment history 
+•	Unmatched transactions 
+
+EVENT 29 — Customer Returns Later
+The same customer comes back.
+Owner searches:
+ABC Trucking
+Immediately sees:
+Customer
+   ↓
+Vehicles
+   ↓
+Previous Invoices
+   ↓
+Payment History
+   ↓
+Outstanding Balance
+Then creates another invoice.
+The cycle starts again.
+________________________________________
+🔄 THE COMPLETE SYSTEM IN ONE FLOW
+This is the part I want you to remember:
+OWNER SETUP
+    ↓
+SHOP PROFILE
+    ↓
+CUSTOMER CREATED
+    ↓
+CUSTOMER VEHICLE ADDED
+    ↓
+TRUCK COMES FOR REPAIR
+    ↓
+CREATE INVOICE
+    ↓
+ADD LABOR
+    ↓
+ADD PARTS
+    ↓
+INVENTORY DEDUCTION
+    ↓
+CALCULATE TAX + TOTAL
+    ↓
+REVIEW INVOICE
+    ↓
+SEND INVOICE
+    ↓
+CUSTOMER OPENS ONLINE INVOICE
+    ↓
+CUSTOMER PAYS
+    ↓
+PAYMENT RECORDED
+    ↓
+BALANCE UPDATED
+    ↓
+INVOICE CLOSED
+    ↓
+PAID RECEIPT SENT
+    ↓
+BANK TRANSACTION IMPORTED
+    ↓
+PAYMENT MATCHED
+    ↓
+CUSTOMER AR UPDATED
+    ↓
+VENDOR EXPENSES RECORDED
+    ↓
+AP UPDATED
+    ↓
+PROFIT CALCULATED
+    ↓
+DASHBOARD UPDATED
+    ↓
+REPORTS GENERATED
+🧠 So what is the actual purpose?
+The owner should be able to open one app and answer these questions:
+Who are my customers?
+Which trucks do they have?
+What work did I perform?
+What parts did I use?
+How much did I charge?
+Has the customer paid?
+Who still owes me?
+What parts do I have?
+What did I buy from vendors?
+What bills do I owe?
+How much money came into the business?
+How much did I spend?
+How much profit did I make?
+That's the system
+

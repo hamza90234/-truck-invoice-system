@@ -1,0 +1,243 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ==========================================
+// SHOP & SETTINGS
+// ==========================================
+
+model ShopProfile {
+  id                  String   @id @default(uuid())
+  email               String   @unique
+  passwordHash        String
+  shopName            String
+  address             String
+  phone               String
+  website             String?
+  logoUrl             String?
+  taxId               String?
+  defaultTaxRate      Decimal  @default(0.00) @db.Decimal(10, 2)
+  defaultPaymentTerms String?
+  creditCardFeePct    Decimal  @default(0.00) @db.Decimal(5, 2)
+  invoiceSettings     String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+// ==========================================
+// CUSTOMERS & VEHICLES
+// ==========================================
+
+model Customer {
+  id             String    @id @default(uuid())
+  companyName    String
+  contactPerson  String?
+  phone          String?
+  email          String?
+  billingAddress String?
+  serviceAddress String?
+  usdot          String?
+  mcNumber       String?
+  ein            String?
+  customerType   String?   // e.g., "Fleet", "Owner-Operator"
+  paymentTerms   String?
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  vehicles       Vehicle[]
+  invoices       Invoice[]
+}
+
+model Vehicle {
+  id             String    @id @default(uuid())
+  customerId     String
+  customer       Customer  @relation(fields: [customerId], references: [id])
+  unitNumber     String?
+  vin            String    @unique
+  year           Int?
+  make           String?
+  model          String?
+  engine         String?
+  transmission   String?
+  licensePlate   String?
+  mileage        Int?
+  equipmentType  String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  invoices       Invoice[]
+}
+
+// ==========================================
+// INVENTORY & PARTS
+// ==========================================
+
+model Part {
+  id                String   @id @default(uuid())
+  partNumber        String   @unique
+  name              String
+  description       String?
+  purchaseCost      Decimal  @db.Decimal(10, 2)
+  sellingPrice      Decimal  @db.Decimal(10, 2)
+  stockQuantity     Int      @default(0)
+  minimumStockLevel Int      @default(5)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  invoiceItems      InvoiceItem[]
+}
+
+// ==========================================
+// INVOICES & BILLING
+// ==========================================
+
+enum InvoiceStatus {
+  DRAFT
+  UNPAID
+  PARTIALLY_PAID
+  PAID
+  CLOSED
+}
+
+model Invoice {
+  id            String        @id @default(uuid())
+  invoiceNumber String        @unique // e.g., "INV-1001"
+  customerId    String
+  customer      Customer      @relation(fields: [customerId], references: [id])
+  vehicleId     String
+  vehicle       Vehicle       @relation(fields: [vehicleId], references: [id])
+  
+  date          DateTime      @default(now())
+  dueDate       DateTime?
+  paymentTerms  String?
+
+  subtotal      Decimal       @default(0.00) @db.Decimal(10, 2)
+  taxAmount     Decimal       @default(0.00) @db.Decimal(10, 2)
+  creditCardFee Decimal       @default(0.00) @db.Decimal(10, 2)
+  totalAmount   Decimal       @default(0.00) @db.Decimal(10, 2)
+  amountPaid    Decimal       @default(0.00) @db.Decimal(10, 2)
+  balance       Decimal       @default(0.00) @db.Decimal(10, 2)
+  
+  status        InvoiceStatus @default(DRAFT)
+  notes         String?
+  warrantyInfo  String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  items         InvoiceItem[]
+  payments      Payment[]
+}
+
+enum ItemType {
+  LABOR
+  PART
+}
+
+model InvoiceItem {
+  id          String   @id @default(uuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id])
+  type        ItemType
+  
+  partId      String?
+  part        Part?    @relation(fields: [partId], references: [id])
+  
+  description String
+  quantity    Decimal  @db.Decimal(10, 2) // Hours for labor, count for parts
+  rate        Decimal  @db.Decimal(10, 2) // Hourly rate or part price
+  total       Decimal  @db.Decimal(10, 2)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ==========================================
+// PAYMENTS & BANKING
+// ==========================================
+
+enum PaymentMethod {
+  CASH
+  CREDIT_CARD
+  DEBIT_CARD
+  ACH
+  ZELLE
+  CHECK
+  EFS_COMCHEK
+  OTHER
+}
+
+model Payment {
+  id              String         @id @default(uuid())
+  invoiceId       String
+  invoice         Invoice        @relation(fields: [invoiceId], references: [id])
+  amount          Decimal        @db.Decimal(10, 2)
+  paymentMethod   PaymentMethod
+  date            DateTime       @default(now())
+  transactionId   String?        // Refers to external or bank transaction ID
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  bankTransaction BankTransaction?
+}
+
+model BankTransaction {
+  id          String   @id @default(uuid())
+  date        DateTime
+  description String
+  amount      Decimal  @db.Decimal(10, 2)
+  isMatched   Boolean  @default(false)
+  
+  paymentId   String?  @unique
+  payment     Payment? @relation(fields: [paymentId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ==========================================
+// VENDORS & EXPENSES
+// ==========================================
+
+model Vendor {
+  id          String   @id @default(uuid())
+  name        String
+  contactInfo String?
+  balance     Decimal  @default(0.00) @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  purchases   VendorPurchase[]
+}
+
+enum PurchaseStatus {
+  UNPAID
+  PAID
+}
+
+model VendorPurchase {
+  id          String         @id @default(uuid())
+  vendorId    String
+  vendor      Vendor         @relation(fields: [vendorId], references: [id])
+  date        DateTime       @default(now())
+  totalAmount Decimal        @db.Decimal(10, 2)
+  status      PurchaseStatus @default(UNPAID)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model Expense {
+  id              String   @id @default(uuid())
+  expenseCategory String   // e.g., "Rent", "Fuel", "Payroll"
+  amount          Decimal  @db.Decimal(10, 2)
+  date            DateTime @default(now())
+  description     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
