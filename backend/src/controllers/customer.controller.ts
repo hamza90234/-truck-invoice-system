@@ -17,7 +17,7 @@ export const getCustomers = async (req: Request, res: Response): Promise<void> =
 // Get a single customer by ID
 export const getCustomerById = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const customer = await prisma.customer.findUnique({
       where: { id },
     });
@@ -85,7 +85,7 @@ export const createCustomer = async (req: Request, res: Response): Promise<void>
 // Update a customer
 export const updateCustomer = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const data = req.body;
 
     const existingCustomer = await prisma.customer.findUnique({ where: { id } });
@@ -109,7 +109,7 @@ export const updateCustomer = async (req: Request, res: Response): Promise<void>
 // Delete a customer
 export const deleteCustomer = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     const existingCustomer = await prisma.customer.findUnique({ where: { id } });
     if (!existingCustomer) {
