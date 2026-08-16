@@ -6,12 +6,22 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Seeding database...');
   
-  const shopCount = await prisma.shopProfile.count();
+  const passwordHash = await bcrypt.hash('admin123', 10);
   
-  if (shopCount === 0) {
+  const existingShop = await prisma.shopProfile.findFirst();
+
+  if (existingShop) {
+    console.log('Shop profile found. Forcing update to admin credentials...');
+    await prisma.shopProfile.update({
+      where: { id: existingShop.id },
+      data: {
+        email: 'admin@truckshop.com',
+        passwordHash,
+      }
+    });
+    console.log('Existing admin forcefully updated to: admin@truckshop.com / admin123');
+  } else {
     console.log('No shop profile found. Creating default admin account...');
-    const passwordHash = await bcrypt.hash('admin123', 10);
-    
     await prisma.shopProfile.create({
       data: {
         email: 'admin@truckshop.com',
@@ -25,8 +35,6 @@ async function main() {
       }
     });
     console.log('Default admin created: admin@truckshop.com / admin123');
-  } else {
-    console.log('Shop profile already exists. Skipping admin creation.');
   }
 }
 
