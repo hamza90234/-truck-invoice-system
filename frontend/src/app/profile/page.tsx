@@ -24,6 +24,7 @@ export default function ProfilePage() {
     defaultPaymentTerms: "Net 30",
     creditCardFeePct: 3.00,
     invoiceSettings: "",
+    password: "",
   });
 
   useEffect(() => {
@@ -63,6 +64,7 @@ export default function ProfilePage() {
           defaultPaymentTerms: data.defaultPaymentTerms || "Net 30",
           creditCardFeePct: data.creditCardFeePct || 3.00,
           invoiceSettings: data.invoiceSettings || "",
+          password: "",
         });
       } catch (err: any) {
         setError(err.message);
@@ -190,6 +192,15 @@ export default function ProfilePage() {
             </div>
           </div>
 
+        </div>
+
+        <div className="pt-8 space-y-6">
+          <h3 className="text-lg font-medium text-slate-900 pb-2 border-b border-slate-200">Security</h3>
+          
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">New Password (leave blank to keep current)</label>
+            <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Enter new password..." className="w-full bg-white border border-slate-300 text-slate-900 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm" />
+          </div>
         </div>
 
         <div className="pt-8 space-y-6">

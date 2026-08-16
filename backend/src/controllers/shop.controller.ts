@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import { prisma } from '../utils/prisma.js';
+import bcrypt from 'bcrypt';
 
 export const getShopProfile = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -22,7 +23,7 @@ export const updateShopProfile = async (req: Request, res: Response): Promise<vo
   try {
     const { 
       shopName, address, phone, email, website, logoUrl, 
-      taxId, defaultTaxRate, defaultPaymentTerms, creditCardFeePct, invoiceSettings
+      taxId, defaultTaxRate, defaultPaymentTerms, creditCardFeePct, invoiceSettings, password
     } = req.body;
 
     const existingShop = await prisma.shopProfile.findFirst();
@@ -44,7 +45,8 @@ export const updateShopProfile = async (req: Request, res: Response): Promise<vo
         defaultTaxRate,
         defaultPaymentTerms,
         creditCardFeePct,
-        invoiceSettings
+        invoiceSettings,
+        ...(password ? { passwordHash: await bcrypt.hash(password, 10) } : {})
       },
     });
 
