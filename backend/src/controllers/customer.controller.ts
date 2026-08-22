@@ -5,7 +5,8 @@ import { prisma } from '../utils/prisma.js';
 export const getCustomers = async (req: Request, res: Response): Promise<void> => {
   try {
     const customers = await prisma.customer.findMany({
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
+      include: { vehicles: true }
     });
     res.status(200).json(customers);
   } catch (error) {
@@ -20,6 +21,15 @@ export const getCustomerById = async (req: Request, res: Response): Promise<void
     const id = req.params.id as string;
     const customer = await prisma.customer.findUnique({
       where: { id },
+      include: {
+        vehicles: true,
+        invoices: {
+          include: {
+            vehicle: true
+          },
+          orderBy: { date: 'desc' }
+        }
+      }
     });
 
     if (!customer) {

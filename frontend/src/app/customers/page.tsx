@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Plus, Search, Building2, Phone, Mail, ChevronRight } from "lucide-react";
-import { API_URL } from "../../lib/config";
+import { API_URL } from "@/lib/config";
 
 interface Customer {
   id: string;

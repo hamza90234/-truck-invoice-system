@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Store, Save } from "lucide-react";
-import { API_URL } from "../../lib/config";
+import { API_URL } from "@/lib/config";
 import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {

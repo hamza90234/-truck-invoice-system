@@ -4,7 +4,7 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Building2, Pencil, Trash2, Phone, Mail, MapPin, Truck, FileText, MoreVertical } from "lucide-react";
-import { API_URL } from "../../../lib/config";
+import { API_URL } from "@/lib/config";
 
 export default function CustomerDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -282,19 +282,128 @@ export default function CustomerDetailsPage({ params }: { params: Promise<{ id: 
               </div>
             )}
 
-            {/* Future Modules Placeholders */}
-            <div className="grid grid-cols-2 gap-2 md:gap-6 p-4 md:p-0">
-              <div className="bg-white md:bg-slate-50 border border-slate-200 md:border-dashed rounded-xl md:rounded-2xl p-4 md:p-6 flex flex-col items-center justify-center text-center h-32 md:min-h-[160px] shadow-sm md:shadow-none">
-                <Truck className="h-6 w-6 md:h-8 md:w-8 text-blue-300 md:text-slate-300 mb-2" />
-                <h4 className="text-sm font-medium text-slate-900">Vehicles</h4>
-                <p className="text-[10px] md:text-xs text-slate-500 mt-1">Coming in Phase 3</p>
+            {/* Vehicles Module */}
+            <div className="bg-white md:border md:border-slate-200 md:rounded-2xl p-4 md:p-6 shadow-sm border-b border-slate-200">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-[13px] uppercase tracking-wider font-semibold text-slate-500 flex items-center gap-2">
+                  <Truck className="h-4 w-4" />
+                  Vehicles
+                </h3>
+                <Link 
+                  href={`/customers/${id}/vehicles/new`}
+                  className="text-sm font-medium text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors"
+                >
+                  + Add Vehicle
+                </Link>
               </div>
-              
-              <div className="bg-white md:bg-slate-50 border border-slate-200 md:border-dashed rounded-xl md:rounded-2xl p-4 md:p-6 flex flex-col items-center justify-center text-center h-32 md:min-h-[160px] shadow-sm md:shadow-none">
-                <FileText className="h-6 w-6 md:h-8 md:w-8 text-blue-300 md:text-slate-300 mb-2" />
-                <h4 className="text-sm font-medium text-slate-900">Invoices</h4>
-                <p className="text-[10px] md:text-xs text-slate-500 mt-1">Coming in Phase 4</p>
+
+              {customer.vehicles && customer.vehicles.length > 0 ? (
+                <div className="space-y-4">
+                  {customer.vehicles.map((vehicle: any) => (
+                    <div key={vehicle.id} className="border border-slate-100 rounded-xl p-4 hover:border-slate-300 transition-colors bg-slate-50">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="font-semibold text-slate-900">
+                            {vehicle.year} {vehicle.make} {vehicle.model}
+                          </h4>
+                          <div className="text-sm text-slate-500 mt-0.5">
+                            Unit #{vehicle.unitNumber || "N/A"} • VIN: {vehicle.vin}
+                          </div>
+                        </div>
+                        <Link 
+                          href={`/customers/${id}/vehicles/${vehicle.id}/edit`}
+                          className="text-slate-400 hover:text-blue-600 p-1"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Link>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-3 text-sm">
+                        {vehicle.licensePlate && (
+                          <div className="flex flex-col">
+                            <span className="text-slate-400 text-xs uppercase tracking-wider">License</span>
+                            <span className="text-slate-700 font-medium">{vehicle.licensePlate}</span>
+                          </div>
+                        )}
+                        {vehicle.mileage && (
+                          <div className="flex flex-col">
+                            <span className="text-slate-400 text-xs uppercase tracking-wider">Mileage</span>
+                            <span className="text-slate-700 font-medium">{vehicle.mileage.toLocaleString()} mi</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 border border-dashed border-slate-200 rounded-xl bg-slate-50">
+                  <p className="text-slate-500 text-sm">No vehicles added yet.</p>
+                </div>
+              )}
+            </div>
+            
+            {/* Customer Invoices Module */}
+            <div className="bg-white md:border md:border-slate-200 md:rounded-2xl p-4 md:p-6 shadow-sm border-b border-slate-200">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-[13px] uppercase tracking-wider font-semibold text-slate-500 flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Repair Invoices
+                </h3>
+                <Link 
+                  href={`/invoices/new?customerId=${id}`}
+                  className="text-sm font-medium text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors"
+                >
+                  + Create Invoice
+                </Link>
               </div>
+
+              {customer.invoices && customer.invoices.length > 0 ? (
+                <div className="divide-y divide-slate-100">
+                  {customer.invoices.map((inv: any) => (
+                    <Link
+                      key={inv.id}
+                      href={`/invoices/${inv.id}`}
+                      className="py-3 flex items-center justify-between hover:bg-slate-50 px-2 rounded-lg transition-colors group"
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-slate-900 text-sm font-mono group-hover:text-blue-600">{inv.invoiceNumber}</span>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            inv.status === 'PAID' ? 'bg-emerald-100 text-emerald-800' :
+                            inv.status === 'PARTIALLY_PAID' ? 'bg-amber-100 text-amber-800' :
+                            inv.status === 'CLOSED' ? 'bg-slate-100 text-slate-800' : 'bg-rose-100 text-rose-800'
+                          }`}>
+                            {inv.status}
+                          </span>
+                        </div>
+                        <div className="text-xs text-slate-500 mt-0.5">
+                          {new Date(inv.date).toLocaleDateString()}
+                          {inv.vehicle ? ` • Unit #${inv.vehicle.unitNumber || inv.vehicle.make}` : ""}
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <div className="text-sm font-bold text-slate-900">${Number(inv.totalAmount).toFixed(2)}</div>
+                        {Number(inv.balance) > 0 ? (
+                          <div className="text-xs font-semibold text-rose-600">Due: ${Number(inv.balance).toFixed(2)}</div>
+                        ) : (
+                          <div className="text-xs text-emerald-600 font-medium">Paid in Full</div>
+                        )}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 border border-dashed border-slate-200 rounded-xl bg-slate-50">
+                  <p className="text-slate-500 text-sm">No invoices created for this customer yet.</p>
+                  <Link 
+                    href={`/invoices/new?customerId=${id}`}
+                    className="text-xs text-blue-600 font-semibold hover:underline mt-1 inline-block"
+                  >
+                    Create first invoice
+                  </Link>
+                </div>
+              )}
             </div>
             
           </div>

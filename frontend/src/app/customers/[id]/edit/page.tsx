@@ -4,7 +4,7 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, Save, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { API_URL } from "../../../../lib/config";
+import { API_URL } from "@/lib/config";
 
 export default function EditCustomerPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
