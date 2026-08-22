@@ -65,11 +65,14 @@ export const getExpenseSummary = async (req: Request, res: Response): Promise<vo
       categoryMap[cat] = (categoryMap[cat] || 0) + amt;
     }
 
-    const categoryBreakdown = Object.keys(categoryMap).map((cat) => ({
-      category: cat,
-      amount: categoryMap[cat],
-      percentage: totalSpent > 0 ? Number(((categoryMap[cat] / totalSpent) * 100).toFixed(1)) : 0
-    }));
+    const categoryBreakdown = Object.keys(categoryMap).map((cat) => {
+      const amt = categoryMap[cat] ?? 0;
+      return {
+        category: cat,
+        amount: amt,
+        percentage: totalSpent > 0 ? Number(((amt / totalSpent) * 100).toFixed(1)) : 0
+      };
+    });
 
     categoryBreakdown.sort((a, b) => b.amount - a.amount);
 

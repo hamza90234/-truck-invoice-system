@@ -22,9 +22,9 @@ export const getNextInvoiceNumber = async (req: Request, res: Response): Promise
 
     // Try extracting numeric portion
     const match = lastInvoice.invoiceNumber.match(/\d+$/);
-    if (match) {
+    if (match && match[0]) {
       const nextNum = parseInt(match[0], 10) + 1;
-      const prefix = lastInvoice.invoiceNumber.slice(0, match.index);
+      const prefix = lastInvoice.invoiceNumber.slice(0, match.index ?? 0);
       res.status(200).json({ nextInvoiceNumber: `${prefix}${nextNum}` });
     } else {
       const count = await prisma.invoice.count();
