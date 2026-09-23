@@ -333,52 +333,95 @@ export default function VendorDetailPage({ params }: { params: Promise<{ id: str
               <p className="text-[11px] text-slate-500 mt-0.5">Click &quot;Restock / Record Purchase&quot; to log parts bought from this supplier.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase font-semibold">
-                  <tr>
-                    <th className="py-3 px-3">Date</th>
-                    <th className="py-3 px-3 text-right">Order Amount</th>
-                    <th className="py-3 px-3 text-center">Payment Status</th>
-                    <th className="py-3 px-3 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {vendor.purchases.map((p: any) => (
-                    <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-3.5 px-3 text-slate-800 font-medium whitespace-nowrap">
-                        {new Date(p.date).toLocaleDateString()}
-                      </td>
-                      <td className="py-3.5 px-3 text-right font-extrabold text-slate-900 whitespace-nowrap">
-                        ${Number(p.totalAmount).toFixed(2)}
-                      </td>
-                      <td className="py-3.5 px-3 text-center whitespace-nowrap">
-                        {p.status === "PAID" ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                            PAID
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
-                            UNPAID
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3.5 px-3 text-right whitespace-nowrap">
+            <>
+              {/* Mobile Card Layout (visible on small screens only) */}
+              <div className="md:hidden divide-y divide-slate-100">
+                {vendor.purchases.map((p: any) => (
+                  <div key={p.id} className="p-3.5 hover:bg-slate-50 transition-colors">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs text-slate-800 font-medium mb-1">
+                          {new Date(p.date).toLocaleDateString()}
+                        </div>
+                        <div className="mt-1">
+                          {p.status === "PAID" ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                              PAID
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                              UNPAID
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <div className="text-sm font-extrabold text-slate-900 mb-2">
+                          ${Number(p.totalAmount).toFixed(2)}
+                        </div>
                         {p.status === "UNPAID" && (
                           <button
                             type="button"
                             onClick={() => handleMarkPaid(p.id)}
-                            className="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold px-2.5 py-1 rounded-lg text-xs transition-colors"
+                            className="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold px-2.5 py-1.5 rounded-lg text-xs transition-colors shadow-sm"
                           >
                             <CheckCircle2 className="h-3.5 w-3.5" /> Mark Paid
                           </button>
                         )}
-                      </td>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Table Layout (hidden on small screens) */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase font-semibold">
+                    <tr>
+                      <th className="py-3 px-3">Date</th>
+                      <th className="py-3 px-3 text-right">Order Amount</th>
+                      <th className="py-3 px-3 text-center">Payment Status</th>
+                      <th className="py-3 px-3 text-right">Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {vendor.purchases.map((p: any) => (
+                      <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="py-3.5 px-3 text-slate-800 font-medium whitespace-nowrap">
+                          {new Date(p.date).toLocaleDateString()}
+                        </td>
+                        <td className="py-3.5 px-3 text-right font-extrabold text-slate-900 whitespace-nowrap">
+                          ${Number(p.totalAmount).toFixed(2)}
+                        </td>
+                        <td className="py-3.5 px-3 text-center whitespace-nowrap">
+                          {p.status === "PAID" ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                              PAID
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                              UNPAID
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-3 text-right whitespace-nowrap">
+                          {p.status === "UNPAID" && (
+                            <button
+                              type="button"
+                              onClick={() => handleMarkPaid(p.id)}
+                              className="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold px-2.5 py-1 rounded-lg text-xs transition-colors"
+                            >
+                              <CheckCircle2 className="h-3.5 w-3.5" /> Mark Paid
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       </div>
