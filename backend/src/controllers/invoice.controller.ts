@@ -141,7 +141,10 @@ export const getPublicInvoice = async (req: Request, res: Response): Promise<voi
               contactPerson: true,
               phone: true,
               email: true,
-              billingAddress: true
+              billingAddress: true,
+              usdot: true,
+              mcNumber: true,
+              customerType: true
             }
           },
           vehicle: {
@@ -152,7 +155,10 @@ export const getPublicInvoice = async (req: Request, res: Response): Promise<voi
               make: true,
               model: true,
               licensePlate: true,
-              mileage: true
+              mileage: true,
+              engine: true,
+              transmission: true,
+              equipmentType: true
             }
           },
           items: {
@@ -162,7 +168,13 @@ export const getPublicInvoice = async (req: Request, res: Response): Promise<voi
               description: true,
               quantity: true,
               rate: true,
-              total: true
+              total: true,
+              part: {
+                select: {
+                  partNumber: true,
+                  name: true
+                }
+              }
             }
           },
           payments: {
@@ -170,7 +182,8 @@ export const getPublicInvoice = async (req: Request, res: Response): Promise<voi
               id: true,
               amount: true,
               paymentMethod: true,
-              date: true
+              date: true,
+              transactionId: true
             },
             orderBy: { date: 'desc' }
           }
@@ -184,6 +197,7 @@ export const getPublicInvoice = async (req: Request, res: Response): Promise<voi
           email: true,
           website: true,
           logoUrl: true,
+          taxId: true,
           creditCardFeePct: true
         }
       })

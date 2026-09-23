@@ -19,3 +19,62 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ====================================================
+   ULTRA-PROFESSIONAL PRINT & PDF RULES
+   ==================================================== */
+@media print {
+  @page {
+    size: letter portrait;
+    margin: 8mm 10mm 10mm 10mm;
+  }
+
+  html, body {
+    height: auto !important;
+    min-height: 100% !important;
+    overflow: visible !important;
+    position: static !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    font-size: 11pt !important;
+  }
+
+  main {
+    overflow: visible !important;
+    height: auto !important;
+    position: static !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  nav,
+  header,
+  footer,
+  aside,
+  .no-print,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .print-avoid-break {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Crisp monochrome and high-res borders */
+  table {
+    border-collapse: collapse !important;
+  }
+
+  th, td {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+

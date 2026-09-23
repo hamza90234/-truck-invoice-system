@@ -14,25 +14,26 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@prisma/client": "^6.3.1",
+    "bcrypt": "^5.1.1",
     "cors": "^2.8.6",
+    "csv-parse": "^5.5.3",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "bcrypt": "^5.1.1",
     "jsonwebtoken": "^9.0.2",
-    "@prisma/client": "^6.3.1",
     "multer": "^1.4.5-lts.1"
   },
   "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/multer": "^1.4.13",
     "@types/node": "^22.13.1",
     "prisma": "^6.3.1",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.3",
-    "@types/bcrypt": "^5.0.2",
-    "@types/jsonwebtoken": "^9.0.6",
-    "@types/multer": "^1.4.11"
+    "typescript": "^5.7.3"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

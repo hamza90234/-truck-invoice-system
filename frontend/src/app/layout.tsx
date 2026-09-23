@@ -23,6 +23,7 @@ export const viewport: Viewport = {
 };
 
 import Navbar from "./components/Navbar";
+import AuthGuard from "./components/AuthGuard";
 
 export const metadata: Metadata = {
   title: "Hussain Invoice",
@@ -36,6 +37,10 @@ export const metadata: Metadata = {
     telephone: false, // Prevents iOS styling numbers as links
   },
   manifest: "/manifest.json",
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -44,9 +49,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body suppressHydrationWarning className="fixed inset-0 flex flex-col bg-slate-50 text-slate-900 overflow-hidden select-none md:select-auto">
-        <Navbar />
-        <main className="flex-1 w-full max-w-full overflow-y-auto overscroll-y-contain pb-16 md:pb-0 relative scroll-smooth">{children}</main>
+      <body suppressHydrationWarning className="fixed inset-0 flex flex-col bg-slate-50 text-slate-900 overflow-hidden select-none md:select-auto print:static print:overflow-visible print:h-auto print:min-h-full print:bg-white">
+        <AuthGuard>
+          <Navbar />
+          <main className="flex-1 w-full max-w-full overflow-y-auto overscroll-y-contain pb-16 md:pb-0 relative scroll-smooth print:overflow-visible print:h-auto print:pb-0 print:static print:m-0 print:p-0">{children}</main>
+        </AuthGuard>
       </body>
     </html>
   );

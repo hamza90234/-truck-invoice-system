@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="50%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <linearGradient id="truckGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#60a5fa" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000" flood-opacity="0.35" />
+    </filter>
+  </defs>
+
+  <!-- Background Rounded Shield/Square -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)" />
+
+  <!-- Inner Subtle Border -->
+  <rect x="16" y="16" width="480" height="480" rx="96" fill="none" stroke="#38bdf8" stroke-width="4" stroke-opacity="0.3" />
+
+  <!-- Icon Graphics Group -->
+  <g filter="url(#shadow)">
+    <!-- Heavy Truck Silhouette -->
+    <path d="M120 330 L120 230 C120 218 129 208 141 208 L280 208 L280 180 C280 168 289 160 300 160 L360 160 C370 160 380 166 386 174 L426 230 C432 238 436 248 436 258 L436 330 C436 342 426 352 414 352 L394 352 C394 326 372 304 346 304 C320 304 298 326 298 352 L234 352 C234 326 212 304 186 304 C160 304 138 326 138 352 L120 352 Z" fill="url(#truckGrad)" />
+    
+    <!-- Windshield -->
+    <path d="M300 184 L350 184 L386 232 L300 232 Z" fill="#0f172a" fill-opacity="0.75" />
+    
+    <!-- Left Wheel Well & Tire -->
+    <circle cx="186" cy="352" r="38" fill="#090d16" stroke="#38bdf8" stroke-width="8" />
+    <circle cx="186" cy="352" r="16" fill="#94a3b8" />
+
+    <!-- Right Wheel Well & Tire -->
+    <circle cx="346" cy="352" r="38" fill="#090d16" stroke="#38bdf8" stroke-width="8" />
+    <circle cx="346" cy="352" r="16" fill="#94a3b8" />
+
+    <!-- Headlight Beam Accent -->
+    <polygon points="426,270 456,276 456,286 426,284" fill="#fef08a" />
+  </g>
+
+  <!-- Hussain Brand 'H' Emblem at Top Left -->
+  <g transform="translate(68, 68)">
+    <rect width="64" height="64" rx="16" fill="#0284c7" />
+    <text x="32" y="47" font-family="system-ui, -apple-system, sans-serif" font-size="40" font-weight="900" fill="#ffffff" text-anchor="middle">H</text>
+  </g>
+</svg>

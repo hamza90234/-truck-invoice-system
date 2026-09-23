@@ -11,6 +11,8 @@ import {
   Package, 
   Building2, 
   Receipt,
+  Landmark,
+  BarChart3,
   MoreHorizontal
 } from "lucide-react";
 
@@ -33,6 +35,8 @@ export default function Navbar() {
     { name: "Inventory", href: "/inventory", icon: Package },
     { name: "Vendors", href: "/vendors", icon: Building2 },
     { name: "Expenses", href: "/expenses", icon: Receipt },
+    { name: "Banking", href: "/banking", icon: Landmark },
+    { name: "Reports", href: "/reports", icon: BarChart3 },
     { name: "Settings", href: "/profile", icon: User },
   ];
 
@@ -52,12 +56,14 @@ export default function Navbar() {
     pathname === "/inventory" || 
     pathname === "/vendors" || 
     pathname === "/expenses" || 
+    pathname === "/banking" || 
+    pathname === "/reports" || 
     pathname === "/profile";
 
   return (
     <>
-      {/* Desktop Top Navbar (Hidden on Mobile) */}
-      <nav className="hidden md:flex bg-white border-b border-slate-200 px-6 py-3.5 items-center justify-between sticky top-0 z-50 shadow-xs">
+      {/* Desktop Top Navbar (Hidden on Mobile, Hidden on Print) */}
+      <nav className="hidden md:flex bg-white border-b border-slate-200 px-6 py-3.5 items-center justify-between sticky top-0 z-50 shadow-xs print:hidden">
         <div className="flex items-center gap-6">
           <Link href="/dashboard" className="text-lg font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
             <span className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-black text-base shadow-sm">
@@ -97,8 +103,8 @@ export default function Navbar() {
         </button>
       </nav>
 
-      {/* Mobile Bottom Tab Bar (Hidden on Desktop, and hidden on inner pages) */}
-      <nav className={`md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 pb-safe ${isRootTab ? 'block' : 'hidden'}`}>
+      {/* Mobile Bottom Tab Bar (Hidden on Desktop, hidden on inner pages, hidden on Print) */}
+      <nav className={`md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 pb-safe print:hidden ${isRootTab ? 'block' : 'hidden'}`}>
         <div className="flex items-center justify-around h-16">
           {mobileNavItems.map((item) => {
             const Icon = item.icon;

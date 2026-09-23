@@ -293,12 +293,22 @@ export default function InvoicesPage() {
                       {getStatusBadge(inv.status)}
                     </td>
                     <td className="py-3.5 px-3 text-right whitespace-nowrap">
-                      <Link
-                        href={`/invoices/${inv.id}`}
-                        className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-semibold px-2.5 py-1 rounded hover:bg-blue-50 transition-colors"
-                      >
-                        View <ChevronRight className="h-3.5 w-3.5" />
-                      </Link>
+                      <div className="flex items-center justify-end gap-1">
+                        <Link
+                          href={`/invoices/${inv.id}/print`}
+                          target="_blank"
+                          title="Quick Print / PDF"
+                          className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
+                        >
+                          <Printer className="h-3.5 w-3.5" />
+                        </Link>
+                        <Link
+                          href={`/invoices/${inv.id}`}
+                          className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-semibold px-2.5 py-1 rounded hover:bg-blue-50 transition-colors"
+                        >
+                          View <ChevronRight className="h-3.5 w-3.5" />
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}

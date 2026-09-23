@@ -10,6 +10,8 @@ import invoiceRoutes from './routes/invoice.routes.js';
 import dashboardRoutes from './routes/dashboard.routes.js';
 import vendorRoutes from './routes/vendor.routes.js';
 import expenseRoutes from './routes/expense.routes.js';
+import bankingRoutes from './routes/banking.routes.js';
+import reportRoutes from './routes/report.routes.js';
 
 dotenv.config();
 
@@ -35,6 +37,8 @@ app.use('/api/invoices', invoiceRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/vendors', vendorRoutes);
 app.use('/api/expenses', expenseRoutes);
+app.use('/api/banking', bankingRoutes);
+app.use('/api/reports', reportRoutes);
 
 // Health Check
 app.get('/', (req, res) => {
