@@ -122,7 +122,7 @@ try {
 export async function GET() {
   const pngBuffer = generateIconPng(192);
 
-  return new NextResponse(pngBuffer, {
+  return new NextResponse(new Uint8Array(pngBuffer), {
     status: 200,
     headers: {
       "Content-Type": "image/png",
