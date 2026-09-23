@@ -57,7 +57,49 @@ export default function EditVehiclePage({ params }: { params: Promise<{ id: stri
 
     fetchVehicle();
   }, [vehicleId]);
+  const [decodingVin, setDecodingVin] = useState(false);
 
+  const handleDecodeVin = async () => {
+    const vin = formData.vin.trim();
+    if (vin.length !== 17) {
+      setError("VIN must be exactly 17 characters long to decode.");
+      return;
+    }
+    setDecodingVin(true);
+    setError("");
+    try {
+      const res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${vin}?format=json`);
+      if (!res.ok) throw new Error("Failed to contact VIN decoder service.");
+      const data = await res.json();
+      
+      let make = "";
+      let model = "";
+      let year = "";
+      
+      if (data && data.Results) {
+        data.Results.forEach((item: any) => {
+          if (item.Variable === "Make" && item.Value) make = item.Value;
+          if (item.Variable === "Model" && item.Value) model = item.Value;
+          if (item.Variable === "Model Year" && item.Value) year = item.Value;
+        });
+      }
+      
+      if (!make && !year) {
+        setError("Could not decode this VIN. Please enter details manually.");
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          make: make || prev.make,
+          model: model || prev.model,
+          year: year || prev.year
+        }));
+      }
+    } catch (err: any) {
+      setError("Error decoding VIN. Please enter details manually.");
+    } finally {
+      setDecodingVin(false);
+    }
+  };
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -175,16 +217,26 @@ export default function EditVehiclePage({ params }: { params: Promise<{ id: stri
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">VIN (Required) *</label>
-                <input
-                  type="text"
-                  name="vin"
-                  required
-                  value={formData.vin}
-                  onChange={handleChange}
-                  className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none uppercase"
-                  placeholder="17-character VIN"
-                  maxLength={17}
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    name="vin"
+                    required
+                    value={formData.vin}
+                    onChange={handleChange}
+                    className="flex-1 p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none uppercase"
+                    placeholder="17-character VIN"
+                    maxLength={17}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleDecodeVin}
+                    disabled={decodingVin || formData.vin.length < 17}
+                    className="px-3 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 transition-colors disabled:opacity-50 whitespace-nowrap"
+                  >
+                    {decodingVin ? "Decoding..." : "Decode"}
+                  </button>
+                </div>
               </div>
               
               <div>

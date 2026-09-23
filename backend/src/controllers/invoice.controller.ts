@@ -253,11 +253,16 @@ export const createInvoice = async (req: Request, res: Response): Promise<void> 
 
     // Calculate line totals and subtotal
     let subtotal = 0;
+    let partsSubtotal = 0;
     const processedItems = items.map((item: any) => {
       const qty = parseFloat(item.quantity) || 0;
       const rate = parseFloat(item.rate) || 0;
       const itemTotal = Number((qty * rate).toFixed(2));
       subtotal += itemTotal;
+      
+      if (item.type === 'PART') {
+        partsSubtotal += itemTotal;
+      }
 
       return {
         type: item.type === 'PART' ? ('PART' as const) : ('LABOR' as const),
@@ -270,8 +275,10 @@ export const createInvoice = async (req: Request, res: Response): Promise<void> 
     });
 
     subtotal = Number(subtotal.toFixed(2));
+    partsSubtotal = Number(partsSubtotal.toFixed(2));
     const taxRateNum = parseFloat(taxRate) || 0;
-    const taxAmount = Number(((subtotal * taxRateNum) / 100).toFixed(2));
+    // Apply tax ONLY to parts (labor is tax-exempt)
+    const taxAmount = Number(((partsSubtotal * taxRateNum) / 100).toFixed(2));
     const totalAmount = Number((subtotal + taxAmount).toFixed(2));
     const balance = totalAmount;
 
@@ -373,11 +380,16 @@ export const updateInvoice = async (req: Request, res: Response): Promise<void> 
 
     // Calculate line totals and subtotal
     let subtotal = 0;
+    let partsSubtotal = 0;
     const processedItems = items.map((item: any) => {
       const qty = parseFloat(item.quantity) || 0;
       const rate = parseFloat(item.rate) || 0;
       const itemTotal = Number((qty * rate).toFixed(2));
       subtotal += itemTotal;
+      
+      if (item.type === 'PART') {
+        partsSubtotal += itemTotal;
+      }
 
       return {
         type: item.type === 'PART' ? ('PART' as const) : ('LABOR' as const),
@@ -390,8 +402,10 @@ export const updateInvoice = async (req: Request, res: Response): Promise<void> 
     });
 
     subtotal = Number(subtotal.toFixed(2));
+    partsSubtotal = Number(partsSubtotal.toFixed(2));
     const taxRateNum = parseFloat(taxRate) || 0;
-    const taxAmount = Number(((subtotal * taxRateNum) / 100).toFixed(2));
+    // Apply tax ONLY to parts (labor is tax-exempt)
+    const taxAmount = Number(((partsSubtotal * taxRateNum) / 100).toFixed(2));
     const totalAmount = Number((subtotal + taxAmount).toFixed(2));
     const amountPaid = Number(existingInvoice.amountPaid);
     const balance = Number((totalAmount - amountPaid).toFixed(2));

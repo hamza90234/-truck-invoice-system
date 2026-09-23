@@ -88,6 +88,12 @@ function InvoiceCreateForm() {
   const [notes, setNotes] = useState("");
   const [warrantyInfo, setWarrantyInfo] = useState("30-day labor and 90-day parts warranty from date of repair.");
 
+  // Quick Part Add Modal
+  const [showPartModal, setShowPartModal] = useState(false);
+  const [newPart, setNewPart] = useState({ partNumber: "", name: "", sellingPrice: "", purchaseCost: "", stockQuantity: "0", minimumStockLevel: "5" });
+  const [savingPart, setSavingPart] = useState(false);
+  const [partError, setPartError] = useState("");
+
   // Line items
   const [laborItems, setLaborItems] = useState<LaborLine[]>([
     { id: "labor-1", description: "Standard Diagnostic & Inspection", quantity: "1", rate: "120" }
@@ -131,7 +137,7 @@ function InvoiceCreateForm() {
           const shopData = await shopRes.json();
           if (shopData.defaultTaxRate !== undefined) setTaxRate(shopData.defaultTaxRate.toString());
           if (shopData.defaultPaymentTerms) setPaymentTerms(shopData.defaultPaymentTerms);
-          if (shopData.creditCardFeePct !== undefined) setCreditCardFeePct(Number(shopData.creditCardFeePct));
+      if (shopData.creditCardFeePct !== undefined) setCreditCardFeePct(Number(shopData.creditCardFeePct));
         }
       } catch (err: any) {
         console.error(err);
@@ -143,6 +149,51 @@ function InvoiceCreateForm() {
 
     initializeData();
   }, [preselectedCustomerId]);
+
+  const handleQuickAddPart = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingPart(true);
+    setPartError("");
+    try {
+      const res = await fetch(`${API_URL}/api/parts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...newPart,
+          sellingPrice: parseFloat(newPart.sellingPrice) || 0,
+          purchaseCost: parseFloat(newPart.purchaseCost) || 0,
+          stockQuantity: parseInt(newPart.stockQuantity, 10) || 0,
+          minimumStockLevel: parseInt(newPart.minimumStockLevel, 10) || 0,
+        })
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to create part");
+      }
+      const createdPart = await res.json();
+      
+      // Update parts catalog directly
+      setPartsCatalog([...partsCatalog, createdPart]);
+      
+      setShowPartModal(false);
+      
+      // Auto-add it to the invoice lines
+      const newRowId = `part-${Date.now()}`;
+      setPartItems([...partItems, {
+        id: newRowId,
+        partId: createdPart.id,
+        description: `[${createdPart.partNumber}] ${createdPart.name}`,
+        quantity: "1",
+        rate: createdPart.sellingPrice.toString(),
+        stockQuantity: createdPart.stockQuantity
+      }]);
+      setNewPart({ partNumber: "", name: "", sellingPrice: "", purchaseCost: "", stockQuantity: "0", minimumStockLevel: "5" });
+    } catch (err: any) {
+      setPartError(err.message);
+    } finally {
+      setSavingPart(false);
+    }
+  };
 
   // When customer changes, update available vehicles
   const handleCustomerChange = (customerId: string) => {
@@ -230,7 +281,8 @@ function InvoiceCreateForm() {
 
   const subtotal = laborSubtotal + partsSubtotal;
   const taxRateNum = parseFloat(taxRate) || 0;
-  const taxAmount = (subtotal * taxRateNum) / 100;
+  // Apply tax ONLY to parts
+  const taxAmount = (partsSubtotal * taxRateNum) / 100;
   const totalAmount = subtotal + taxAmount;
   const cardFeePreview = (totalAmount * (creditCardFeePct || 3)) / 100;
 
@@ -594,15 +646,24 @@ function InvoiceCreateForm() {
                     <div className="flex-1 w-full space-y-1.5">
                       <select
                         value={item.partId}
-                        onChange={(e) => selectPartFromCatalog(item.id, e.target.value)}
-                        className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        onChange={(e) => {
+                          if (e.target.value === "CREATE_NEW") {
+                            setShowPartModal(true);
+                          } else {
+                            selectPartFromCatalog(item.id, e.target.value);
+                          }
+                        }}
+                        className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold"
                       >
                         <option value="">Custom Non-Inventory Part</option>
-                        {partsCatalog.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            [{p.partNumber}] {p.name} — ${Number(p.sellingPrice).toFixed(2)} (Stock: {p.stockQuantity})
-                          </option>
-                        ))}
+                        <option value="CREATE_NEW" className="font-bold text-blue-600">+ Add New Part to Inventory</option>
+                        <optgroup label="Catalog Parts">
+                          {partsCatalog.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              [{p.partNumber}] {p.name} — ${Number(p.sellingPrice).toFixed(2)} (Stock: {p.stockQuantity})
+                            </option>
+                          ))}
+                        </optgroup>
                       </select>
 
                       <input
@@ -775,6 +836,48 @@ function InvoiceCreateForm() {
           </button>
         </div>
       </form>
+
+      {/* Quick Add Part Modal */}
+      {showPartModal && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4">
+            <h3 className="text-lg font-bold text-slate-900">Add Part to Inventory</h3>
+            {partError && (
+              <div className="p-3 bg-red-50 text-red-600 text-xs rounded-lg">{partError}</div>
+            )}
+            <form onSubmit={handleQuickAddPart} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Part Number *</label>
+                  <input required type="text" value={newPart.partNumber} onChange={e => setNewPart({...newPart, partNumber: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-xs" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Part Name *</label>
+                  <input required type="text" value={newPart.name} onChange={e => setNewPart({...newPart, name: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-xs" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Selling Price *</label>
+                  <input required type="number" step="0.01" value={newPart.sellingPrice} onChange={e => setNewPart({...newPart, sellingPrice: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-xs" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Purchase Cost</label>
+                  <input type="number" step="0.01" value={newPart.purchaseCost} onChange={e => setNewPart({...newPart, purchaseCost: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-xs" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Current Stock</label>
+                  <input type="number" value={newPart.stockQuantity} onChange={e => setNewPart({...newPart, stockQuantity: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-xs" />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button type="button" onClick={() => setShowPartModal(false)} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg">Cancel</button>
+                <button type="submit" disabled={savingPart} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg disabled:opacity-50">
+                  {savingPart ? "Saving..." : "Save & Add to Invoice"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
