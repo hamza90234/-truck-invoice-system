@@ -231,90 +231,127 @@ export default function InvoicesPage() {
             </Link>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="border-b border-slate-200 bg-slate-50/70 text-slate-500 uppercase font-semibold">
-                <tr>
-                  <th className="py-3 px-3">Invoice #</th>
-                  <th className="py-3 px-3">Date</th>
-                  <th className="py-3 px-3">Customer</th>
-                  <th className="py-3 px-3">Vehicle</th>
-                  <th className="py-3 px-3 text-right">Total</th>
-                  <th className="py-3 px-3 text-right">Balance Due</th>
-                  <th className="py-3 px-3 text-center">Status</th>
-                  <th className="py-3 px-3 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {invoices.map((inv) => (
-                  <tr key={inv.id} className="hover:bg-slate-50/80 transition-colors group">
-                    <td className="py-3.5 px-3 font-bold text-slate-900">
-                      <Link href={`/invoices/${inv.id}`} className="hover:text-blue-600 flex items-center gap-1.5">
-                        <FileText className="h-3.5 w-3.5 text-slate-400 group-hover:text-blue-600" />
-                        {inv.invoiceNumber}
-                      </Link>
-                    </td>
-                    <td className="py-3.5 px-3 text-slate-600 whitespace-nowrap">
-                      {new Date(inv.date).toLocaleDateString()}
-                    </td>
-                    <td className="py-3.5 px-3">
-                      <div className="font-semibold text-slate-900 truncate max-w-[180px]">
+          <>
+            {/* Mobile Card Layout (visible on small screens only) */}
+            <div className="md:hidden divide-y divide-slate-100">
+              {invoices.map((inv) => (
+                <Link
+                  key={inv.id}
+                  href={`/invoices/${inv.id}`}
+                  className="block p-3.5 hover:bg-slate-50 active:bg-slate-100 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-bold text-slate-900 text-sm font-mono">{inv.invoiceNumber}</span>
+                        {getStatusBadge(inv.status)}
+                      </div>
+                      <div className="text-xs text-slate-600 font-medium truncate">
                         {inv.customer?.companyName || "N/A"}
                       </div>
-                      {inv.customer?.contactPerson && (
-                        <div className="text-[11px] text-slate-400 truncate">{inv.customer.contactPerson}</div>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-3 text-slate-600">
-                      {inv.vehicle ? (
-                        <div>
-                          <span className="font-medium text-slate-800">
-                            Unit #{inv.vehicle.unitNumber || "N/A"}
-                          </span>
-                          <span className="text-[11px] text-slate-400 block truncate max-w-[160px]">
-                            {inv.vehicle.year ? `${inv.vehicle.year} ` : ""}{inv.vehicle.make} {inv.vehicle.model}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-slate-400">N/A</span>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-3 text-right font-bold text-slate-900 whitespace-nowrap">
-                      ${Number(inv.totalAmount).toFixed(2)}
-                    </td>
-                    <td className="py-3.5 px-3 text-right whitespace-nowrap">
-                      {Number(inv.balance) > 0 ? (
-                        <span className="font-bold text-rose-600">${Number(inv.balance).toFixed(2)}</span>
-                      ) : (
-                        <span className="font-medium text-emerald-600">$0.00</span>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-3 text-center whitespace-nowrap">
-                      {getStatusBadge(inv.status)}
-                    </td>
-                    <td className="py-3.5 px-3 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1">
-                        <Link
-                          href={`/invoices/${inv.id}/print`}
-                          target="_blank"
-                          title="Quick Print / PDF"
-                          className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
-                        >
-                          <Printer className="h-3.5 w-3.5" />
-                        </Link>
-                        <Link
-                          href={`/invoices/${inv.id}`}
-                          className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-semibold px-2.5 py-1 rounded hover:bg-blue-50 transition-colors"
-                        >
-                          View <ChevronRight className="h-3.5 w-3.5" />
-                        </Link>
+                      <div className="text-[11px] text-slate-400 mt-0.5">
+                        {inv.vehicle ? `Unit #${inv.vehicle.unitNumber || "N/A"}` : ""} • {new Date(inv.date).toLocaleDateString()}
                       </div>
-                    </td>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="text-sm font-bold text-slate-900">${Number(inv.totalAmount).toFixed(2)}</div>
+                      {Number(inv.balance) > 0 ? (
+                        <div className="text-[11px] font-semibold text-rose-600">Due: ${Number(inv.balance).toFixed(2)}</div>
+                      ) : (
+                        <div className="text-[11px] font-medium text-emerald-600">Paid</div>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* Desktop Table Layout (hidden on small screens) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="border-b border-slate-200 bg-slate-50/70 text-slate-500 uppercase font-semibold">
+                  <tr>
+                    <th className="py-3 px-3">Invoice #</th>
+                    <th className="py-3 px-3">Date</th>
+                    <th className="py-3 px-3">Customer</th>
+                    <th className="py-3 px-3">Vehicle</th>
+                    <th className="py-3 px-3 text-right">Total</th>
+                    <th className="py-3 px-3 text-right">Balance Due</th>
+                    <th className="py-3 px-3 text-center">Status</th>
+                    <th className="py-3 px-3 text-right">Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {invoices.map((inv) => (
+                    <tr key={inv.id} className="hover:bg-slate-50/80 transition-colors group">
+                      <td className="py-3.5 px-3 font-bold text-slate-900">
+                        <Link href={`/invoices/${inv.id}`} className="hover:text-blue-600 flex items-center gap-1.5">
+                          <FileText className="h-3.5 w-3.5 text-slate-400 group-hover:text-blue-600" />
+                          {inv.invoiceNumber}
+                        </Link>
+                      </td>
+                      <td className="py-3.5 px-3 text-slate-600 whitespace-nowrap">
+                        {new Date(inv.date).toLocaleDateString()}
+                      </td>
+                      <td className="py-3.5 px-3">
+                        <div className="font-semibold text-slate-900 truncate max-w-[180px]">
+                          {inv.customer?.companyName || "N/A"}
+                        </div>
+                        {inv.customer?.contactPerson && (
+                          <div className="text-[11px] text-slate-400 truncate">{inv.customer.contactPerson}</div>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-3 text-slate-600">
+                        {inv.vehicle ? (
+                          <div>
+                            <span className="font-medium text-slate-800">
+                              Unit #{inv.vehicle.unitNumber || "N/A"}
+                            </span>
+                            <span className="text-[11px] text-slate-400 block truncate max-w-[160px]">
+                              {inv.vehicle.year ? `${inv.vehicle.year} ` : ""}{inv.vehicle.make} {inv.vehicle.model}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400">N/A</span>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-3 text-right font-bold text-slate-900 whitespace-nowrap">
+                        ${Number(inv.totalAmount).toFixed(2)}
+                      </td>
+                      <td className="py-3.5 px-3 text-right whitespace-nowrap">
+                        {Number(inv.balance) > 0 ? (
+                          <span className="font-bold text-rose-600">${Number(inv.balance).toFixed(2)}</span>
+                        ) : (
+                          <span className="font-medium text-emerald-600">$0.00</span>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-3 text-center whitespace-nowrap">
+                        {getStatusBadge(inv.status)}
+                      </td>
+                      <td className="py-3.5 px-3 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1">
+                          <Link
+                            href={`/invoices/${inv.id}/print`}
+                            target="_blank"
+                            title="Quick Print / PDF"
+                            className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
+                          >
+                            <Printer className="h-3.5 w-3.5" />
+                          </Link>
+                          <Link
+                            href={`/invoices/${inv.id}`}
+                            className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-semibold px-2.5 py-1 rounded hover:bg-blue-50 transition-colors"
+                          >
+                            View <ChevronRight className="h-3.5 w-3.5" />
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>

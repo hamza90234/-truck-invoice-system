@@ -35,7 +35,7 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-8">
+    <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-8 pb-24 md:pb-8">
       <div>
         <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
           <BarChart3 className="h-6 w-6 text-blue-600" />
@@ -49,7 +49,7 @@ export default function ReportsPage() {
         <div className="p-6 border-b border-slate-200 bg-slate-50">
           <h2 className="text-lg font-semibold text-slate-900">Profit & Loss Overview</h2>
         </div>
-        <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="p-4 md:p-6 grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
           <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg">
             <div className="flex items-center gap-2 text-blue-700 font-semibold mb-1">
               <TrendingUp className="h-4 w-4" /> Total Revenue
