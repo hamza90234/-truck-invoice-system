@@ -88,35 +88,36 @@ export default function DashboardPage() {
   const net = stats.netProfit !== undefined ? stats.netProfit : stats.totalRevenue - (stats.totalExpenses || 0);
 
   return (
-    <div className="max-w-6xl mx-auto p-4 md:p-8 pb-24 md:pb-12 space-y-8">
+    <div className="max-w-6xl mx-auto p-4 md:p-8 pb-24 md:pb-12 space-y-6 md:space-y-8">
       {/* Header & Quick Action */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-2.5">
-            <LayoutDashboard className="h-7 w-7 text-blue-600" />
-            Shop Financials & Operations
+          <h1 className="text-xl md:text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+            <LayoutDashboard className="h-6 w-6 md:h-7 md:w-7 text-blue-600" />
+            <span className="md:hidden">Dashboard</span>
+            <span className="hidden md:inline">Shop Financials & Operations</span>
           </h1>
-          <p className="text-slate-500 mt-1 text-sm">Real-time summary of repair revenues, operating expenses, and receivables.</p>
+          <p className="text-slate-500 mt-1 text-sm hidden md:block">Real-time summary of repair revenues, operating expenses, and receivables.</p>
         </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex items-center gap-2 md:gap-2.5 overflow-x-auto scrollbar-none pb-1 md:pb-0">
           <Link
             href="/invoices/new"
-            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2.5 rounded-xl transition-colors shadow-sm text-xs"
+            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2.5 rounded-xl transition-colors shadow-sm text-xs whitespace-nowrap shrink-0"
           >
             <Plus className="h-4 w-4" />
             New Invoice
           </Link>
           <Link
             href="/expenses"
-            className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 font-semibold px-4 py-2.5 rounded-xl border border-slate-200 transition-colors shadow-sm text-xs"
+            className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 font-semibold px-4 py-2.5 rounded-xl border border-slate-200 transition-colors shadow-sm text-xs whitespace-nowrap shrink-0"
           >
             <Receipt className="h-4 w-4 text-slate-500" />
             Log Expense
           </Link>
           <Link
             href="/customers/new"
-            className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 font-semibold px-4 py-2.5 rounded-xl border border-slate-200 transition-colors shadow-sm text-xs"
+            className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 font-semibold px-4 py-2.5 rounded-xl border border-slate-200 transition-colors shadow-sm text-xs whitespace-nowrap shrink-0"
           >
             <Plus className="h-4 w-4 text-slate-400" />
             New Customer
@@ -132,7 +133,7 @@ export default function DashboardPage() {
       )}
 
       {/* Financial Health Ribbon */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {/* Net Profit */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
           <div className="flex items-center justify-between">
@@ -207,7 +208,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Operational Counters Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         {/* Active Customers */}
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
@@ -256,7 +257,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick Launch Action Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         <Link
           href="/invoices/new"
           className="group p-4 bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center justify-between"
