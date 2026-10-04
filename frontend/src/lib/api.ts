@@ -13,7 +13,11 @@ export const apiFetch = async (input: RequestInfo | URL, init?: RequestInit) => 
 
   const response = await fetch(input, newInit);
 
-  if (response.status === 401) {
+  const urlStr = input.toString();
+  const isLogin = urlStr.includes("/api/auth/login");
+  const isPublicInvoice = urlStr.includes("/api/invoices/public/");
+
+  if (response.status === 401 && !isLogin && !isPublicInvoice) {
     if (typeof window !== "undefined") {
       localStorage.removeItem("token");
       window.location.href = "/login";

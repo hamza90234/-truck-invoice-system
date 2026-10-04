@@ -3,11 +3,14 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../utils/prisma.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
-
-
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      res.status(500).json({ error: 'Server configuration error' });
+      return;
+    }
+
     const { email, password } = req.body;
 
     const shop = await prisma.shopProfile.findUnique({ where: { email } });
@@ -22,7 +25,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const token = jwt.sign({ shopId: shop.id }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ shopId: shop.id }, secret, { expiresIn: '7d' });
 
     res.status(200).json({ token, shop: { id: shop.id, shopName: shop.shopName, email: shop.email } });
   } catch (error) {

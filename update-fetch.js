@@ -9,20 +9,21 @@ function walk(dir) {
     const fullPath = path.join(dir, file);
     if (fs.statSync(fullPath).isDirectory()) {
       walk(fullPath);
-    } else if (fullPath.endsWith('.tsx') || fullPath.endsWith('.ts')) {
+    } else if ((fullPath.endsWith('.tsx') || fullPath.endsWith('.ts')) && !fullPath.replace(/\\/g, '/').includes('/app/login/')) {
       let content = fs.readFileSync(fullPath, 'utf8');
-      if (content.includes('fetch(') && !content.includes('apiFetch(')) {
-        // Need to add import
-        if (content.includes('import { API_URL } from "@/lib/config";')) {
-          content = content.replace('import { API_URL } from "@/lib/config";', 'import { API_URL } from "@/lib/config";\nimport { apiFetch } from "@/lib/api";');
-        } else if (content.includes('import { API_URL }')) {
-          content = content.replace('import { API_URL }', 'import { apiFetch } from "@/lib/api";\nimport { API_URL }');
-        } else {
-          content = 'import { apiFetch } from "@/lib/api";\n' + content;
+      if (content.match(/[^a-zA-Z]fetch\(/) || content.startsWith('fetch(')) {
+        
+        // Add import if not present
+        if (!content.includes('import { apiFetch }')) {
+          if (content.includes('import { API_URL }')) {
+            content = content.replace('import { API_URL }', 'import { apiFetch } from "@/lib/api";\nimport { API_URL }');
+          } else {
+            content = 'import { apiFetch } from "@/lib/api";\n' + content;
+          }
         }
 
-        // Replace all fetch(...) with apiFetch(...)
-        content = content.replace(/\bfetch\(/g, 'apiFetch(');
+        // Replace all fetch( with apiFetch( except window.fetch
+        content = content.replace(/(?<![a-zA-Z])fetch\(/g, 'apiFetch(');
         
         fs.writeFileSync(fullPath, content, 'utf8');
         console.log('Updated: ' + fullPath);

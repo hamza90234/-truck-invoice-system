@@ -1,9 +1,13 @@
 import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
-
 export const requireAuth = (req: Request, res: Response, next: NextFunction): void => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    res.status(500).json({ error: 'Server configuration error' });
+    return;
+  }
+
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -14,7 +18,7 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction): vo
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded: any = jwt.verify(token, JWT_SECRET as string);
+    const decoded: any = jwt.verify(token, secret);
     // @ts-ignore
     req.shopId = decoded.shopId;
     next();
