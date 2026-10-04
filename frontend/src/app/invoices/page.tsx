@@ -29,6 +29,7 @@ interface InvoiceListItem {
   amountPaid: number;
   balance: number;
   status: string;
+  isEstimate?: boolean;
   customer: {
     id: string;
     companyName: string;
@@ -87,7 +88,10 @@ export default function InvoicesPage() {
     fetchInvoices();
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, isEstimate?: boolean) => {
+    if (isEstimate) {
+      return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">ESTIMATE</span>;
+    }
     switch (status) {
       case "PAID":
         return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">PAID</span>;
@@ -244,7 +248,7 @@ export default function InvoicesPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-bold text-slate-900 text-sm font-mono">{inv.invoiceNumber}</span>
-                        {getStatusBadge(inv.status)}
+                        {getStatusBadge(inv.status, inv.isEstimate)}
                       </div>
                       <div className="text-xs text-slate-600 font-medium truncate">
                         {inv.customer?.companyName || "N/A"}
@@ -326,7 +330,7 @@ export default function InvoicesPage() {
                         )}
                       </td>
                       <td className="py-3.5 px-3 text-center whitespace-nowrap">
-                        {getStatusBadge(inv.status)}
+                        {getStatusBadge(inv.status, inv.isEstimate)}
                       </td>
                       <td className="py-3.5 px-3 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1">

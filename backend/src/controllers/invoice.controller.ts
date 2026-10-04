@@ -229,7 +229,10 @@ export const createInvoice = async (req: Request, res: Response): Promise<void> 
       notes,
       warrantyInfo,
       status = 'UNPAID',
-      items = []
+      items = [],
+      vehicleOdometer,
+      creditCardFee = 0,
+      isEstimate = false
     } = req.body;
 
     if (!customerId || !vehicleId) {
@@ -279,7 +282,8 @@ export const createInvoice = async (req: Request, res: Response): Promise<void> 
     const taxRateNum = parseFloat(taxRate) || 0;
     // Apply tax ONLY to parts (labor is tax-exempt)
     const taxAmount = Number(((partsSubtotal * taxRateNum) / 100).toFixed(2));
-    const totalAmount = Number((subtotal + taxAmount).toFixed(2));
+    const feeAmount = Number(parseFloat(creditCardFee).toFixed(2));
+    const totalAmount = Number((subtotal + taxAmount + feeAmount).toFixed(2));
     const balance = totalAmount;
 
     // Prisma transaction with increased timeout & atomic updates
@@ -308,13 +312,15 @@ export const createInvoice = async (req: Request, res: Response): Promise<void> 
           date: date ? new Date(date) : new Date(),
           dueDate: dueDate ? new Date(dueDate) : null,
           paymentTerms: paymentTerms || null,
+          vehicleOdometer: vehicleOdometer ? parseInt(vehicleOdometer, 10) : null,
           subtotal,
           taxAmount,
-          creditCardFee: 0,
+          creditCardFee: feeAmount,
           totalAmount,
           amountPaid: 0,
           balance,
           status: status as any,
+          isEstimate: Boolean(isEstimate),
           notes: notes || null,
           warrantyInfo: warrantyInfo || null,
           items: {
@@ -351,7 +357,10 @@ export const updateInvoice = async (req: Request, res: Response): Promise<void> 
       notes,
       warrantyInfo,
       status,
-      items = []
+      items = [],
+      vehicleOdometer,
+      creditCardFee,
+      isEstimate
     } = req.body;
 
     const existingInvoice = await prisma.invoice.findUnique({
@@ -406,7 +415,13 @@ export const updateInvoice = async (req: Request, res: Response): Promise<void> 
     const taxRateNum = parseFloat(taxRate) || 0;
     // Apply tax ONLY to parts (labor is tax-exempt)
     const taxAmount = Number(((partsSubtotal * taxRateNum) / 100).toFixed(2));
-    const totalAmount = Number((subtotal + taxAmount).toFixed(2));
+    
+    // Check if new fee provided, otherwise use existing
+    const feeAmount = creditCardFee !== undefined 
+      ? Number(parseFloat(creditCardFee).toFixed(2)) 
+      : Number(existingInvoice.creditCardFee);
+
+    const totalAmount = Number((subtotal + taxAmount + feeAmount).toFixed(2));
     const amountPaid = Number(existingInvoice.amountPaid);
     const balance = Number((totalAmount - amountPaid).toFixed(2));
 
@@ -449,11 +464,14 @@ export const updateInvoice = async (req: Request, res: Response): Promise<void> 
           date: date ? new Date(date) : existingInvoice.date,
           dueDate: dueDate ? new Date(dueDate) : existingInvoice.dueDate,
           paymentTerms: paymentTerms !== undefined ? paymentTerms : existingInvoice.paymentTerms,
+          vehicleOdometer: vehicleOdometer !== undefined ? (vehicleOdometer ? parseInt(vehicleOdometer, 10) : null) : existingInvoice.vehicleOdometer,
           subtotal,
           taxAmount,
+          creditCardFee: feeAmount,
           totalAmount,
           balance,
           status: finalStatus,
+          isEstimate: isEstimate !== undefined ? Boolean(isEstimate) : existingInvoice.isEstimate,
           notes: notes !== undefined ? notes : existingInvoice.notes,
           warrantyInfo: warrantyInfo !== undefined ? warrantyInfo : existingInvoice.warrantyInfo,
           items: {

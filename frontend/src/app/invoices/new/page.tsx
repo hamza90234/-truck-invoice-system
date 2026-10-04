@@ -79,6 +79,8 @@ function InvoiceCreateForm() {
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState(preselectedCustomerId);
   const [selectedVehicleId, setSelectedVehicleId] = useState(preselectedVehicleId);
+  const [vehicleOdometer, setVehicleOdometer] = useState("");
+  const [isEstimate, setIsEstimate] = useState(false);
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split("T")[0]);
   const [dueDate, setDueDate] = useState("");
   const [paymentTerms, setPaymentTerms] = useState("Net 30");
@@ -201,10 +203,13 @@ function InvoiceCreateForm() {
     const found = customers.find(c => c.id === customerId);
     if (found) {
       setAvailableVehicles(found.vehicles);
+      setAvailableVehicles(found.vehicles);
       if (found.vehicles.length === 1) {
         setSelectedVehicleId(found.vehicles[0].id);
+        setVehicleOdometer(found.vehicles[0].mileage?.toString() || "");
       } else {
         setSelectedVehicleId("");
+        setVehicleOdometer("");
       }
     } else {
       setAvailableVehicles([]);
@@ -334,8 +339,10 @@ function InvoiceCreateForm() {
         date: invoiceDate,
         dueDate: dueDate || null,
         paymentTerms,
+        vehicleOdometer: vehicleOdometer ? vehicleOdometer.trim() : null,
         taxRate: taxRateNum,
-        status,
+        isEstimate,
+        status: isEstimate ? "DRAFT" : status,
         notes,
         warrantyInfo,
         items: [...validLabor, ...validParts]
@@ -469,18 +476,45 @@ function InvoiceCreateForm() {
               )}
             </div>
           </div>
+
+          {/* Odometer Input */}
+          {selectedVehicleId && (
+            <div className="pt-2">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Current Odometer / Mileage (Optional)
+              </label>
+              <input
+                type="number"
+                value={vehicleOdometer}
+                onChange={(e) => setVehicleOdometer(e.target.value)}
+                placeholder="e.g. 120500"
+                className="w-full md:w-1/2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              />
+            </div>
+          )}
         </div>
 
         {/* Section 2: Invoice Details */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
-          <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3">
-            <FileText className="h-4 w-4 text-blue-600" />
-            Invoice Terms & Dates
-          </h2>
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <FileText className="h-4 w-4 text-blue-600" />
+              Document Terms & Dates
+            </h2>
+            <label className="flex items-center gap-2 cursor-pointer bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+              <input
+                type="checkbox"
+                checked={isEstimate}
+                onChange={(e) => setIsEstimate(e.target.checked)}
+                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+              />
+              <span className="text-xs font-bold text-slate-700">Save as Estimate</span>
+            </label>
+          </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Invoice Number</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">{isEstimate ? "Estimate Number" : "Invoice Number"}</label>
               <input
                 type="text"
                 value={invoiceNumber}

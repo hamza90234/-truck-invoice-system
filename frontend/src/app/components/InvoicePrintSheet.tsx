@@ -50,9 +50,11 @@ export default function InvoicePrintSheet({ invoice, publicUrl, hideQrCode = fal
         </div>
 
         <div className="text-right">
-          <h2 className="text-4xl font-light text-slate-900 mb-4 uppercase tracking-widest">Invoice</h2>
+          <h2 className="text-4xl font-light text-slate-900 mb-4 uppercase tracking-widest">
+            {invoice.isEstimate ? "Estimate" : "Invoice"}
+          </h2>
           <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm text-right justify-end">
-            <span className="text-slate-500 font-medium">Invoice No:</span>
+            <span className="text-slate-500 font-medium">{invoice.isEstimate ? "Estimate No:" : "Invoice No:"}</span>
             <span className="font-semibold text-slate-900">{invoice.invoiceNumber || "N/A"}</span>
             
             <span className="text-slate-500 font-medium">Date:</span>
@@ -103,7 +105,7 @@ export default function InvoicePrintSheet({ invoice, publicUrl, hideQrCode = fal
             </p>
             <div className="grid grid-cols-2 gap-2 mt-2 text-slate-600">
               <p><span className="font-semibold text-slate-500 mr-1">VIN:</span> {vehicle.vin || "N/A"}</p>
-              <p><span className="font-semibold text-slate-500 mr-1">Odometer:</span> {vehicle.mileage ? vehicle.mileage.toLocaleString() : "N/A"}</p>
+              <p><span className="font-semibold text-slate-500 mr-1">Odometer:</span> {invoice.vehicleOdometer ? invoice.vehicleOdometer.toLocaleString() : (vehicle.mileage ? vehicle.mileage.toLocaleString() : "N/A")}</p>
               <p><span className="font-semibold text-slate-500 mr-1">Plate:</span> {vehicle.licensePlate || "N/A"}</p>
               <p><span className="font-semibold text-slate-500 mr-1">Engine:</span> {vehicle.engine || "N/A"}</p>
             </div>

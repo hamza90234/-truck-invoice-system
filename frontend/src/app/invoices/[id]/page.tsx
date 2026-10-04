@@ -38,6 +38,11 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
   const [submittingPayment, setSubmittingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState("");
 
+  // Share Modal State
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [sharePaymentMethod, setSharePaymentMethod] = useState("CASH_CHECK");
+  const [isUpdatingFee, setIsUpdatingFee] = useState(false);
+
   const fetchInvoice = async () => {
     try {
       setLoading(true);
@@ -69,6 +74,86 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
     navigator.clipboard.writeText(publicUrl);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2500);
+  };
+
+  const handleNativeShare = async (method: string) => {
+    const publicUrl = `${window.location.origin}/i/${id}`;
+    const message = `Here is your invoice ${invoice.invoiceNumber} from ${invoice.shopProfile?.shopName || 'our shop'}: ${publicUrl}`;
+    
+    if (method === "SMS") {
+      window.open(`sms:?&body=${encodeURIComponent(message)}`, '_blank');
+    } else if (method === "EMAIL") {
+      const subject = `Invoice ${invoice.invoiceNumber}`;
+      window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`, '_blank');
+    } else {
+      // Native Share API if supported
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: `Invoice ${invoice.invoiceNumber}`,
+            text: message,
+            url: publicUrl
+          });
+        } catch (err) {
+          console.log("Share failed", err);
+        }
+      } else {
+        handleCopyPublicLink();
+      }
+    }
+  };
+
+  const handleUpdateFeeAndShare = async (method: string) => {
+    setIsUpdatingFee(true);
+    try {
+      // If they selected Credit Card, add 3% fee (or whatever default).
+      // Let's assume standard 3%. We hit the backend update route with the items and the new creditCardFee.
+      // But we just need to update creditCardFee. Since updateInvoice requires full payload, we might just use a targeted PATCH or we can send the full payload back.
+      // Since `invoice.controller.ts` updateInvoice accepts a full payload, we'll reconstruct it.
+      let feeAmount = 0;
+      if (sharePaymentMethod === "CREDIT_CARD") {
+        const sub = Number(invoice.subtotal);
+        const tax = Number(invoice.taxAmount);
+        feeAmount = (sub + tax) * 0.03; 
+      }
+      
+      const payload = {
+        customerId: invoice.customerId,
+        vehicleId: invoice.vehicleId,
+        invoiceNumber: invoice.invoiceNumber,
+        date: invoice.date,
+        dueDate: invoice.dueDate,
+        paymentTerms: invoice.paymentTerms,
+        vehicleOdometer: invoice.vehicleOdometer,
+        taxRate: 0, // Using 0 because we don't know the exact percentage but the backend will recalculate based on existing items if we pass them. Wait, if we don't pass items, the backend ignores partsSubtotal.
+        creditCardFee: feeAmount,
+        status: invoice.status,
+        notes: invoice.notes,
+        warrantyInfo: invoice.warrantyInfo,
+        items: invoice.items.map((i:any) => ({
+          type: i.type,
+          partId: i.partId,
+          description: i.description,
+          quantity: Number(i.quantity),
+          rate: Number(i.rate)
+        }))
+      };
+
+      const res = await fetch(`${API_URL}/api/invoices/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      
+      if (!res.ok) throw new Error("Failed to update fee");
+      await fetchInvoice();
+      
+      handleNativeShare(method);
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setIsUpdatingFee(false);
+    }
   };
 
   const handleCloseInvoice = async () => {
@@ -134,7 +219,10 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, isEstimate?: boolean) => {
+    if (isEstimate) {
+      return <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-300">ESTIMATE</span>;
+    }
     switch (status) {
       case "PAID":
         return <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">PAID</span>;
@@ -183,7 +271,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-base md:text-lg font-bold text-slate-900 font-mono">{invoice.invoiceNumber}</h1>
-              {getStatusBadge(invoice.status)}
+              {getStatusBadge(invoice.status, invoice.isEstimate)}
             </div>
           </div>
         </div>
@@ -210,14 +298,14 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
             Print Preview
           </Link>
 
-          {/* Copy Public Link */}
+          {/* Share Link Modal Trigger */}
           <button
             type="button"
-            onClick={handleCopyPublicLink}
-            className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+            onClick={() => setShowShareModal(true)}
+            className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
           >
-            {copiedLink ? <Check className="h-4 w-4 text-emerald-600" /> : <Share2 className="h-4 w-4 text-slate-600" />}
-            {copiedLink ? "Link Copied!" : "Share Link"}
+            <Share2 className="h-4 w-4" />
+            Send / Share
           </button>
 
           {/* Record Payment */}
@@ -378,6 +466,87 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Share / Send Invoice Modal */}
+      {showShareModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm print:hidden">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                <Share2 className="h-4 w-4 text-blue-600" />
+                Send Invoice to Customer
+              </h3>
+              <button onClick={() => setShowShareModal(false)} className="p-1 hover:bg-slate-200 rounded-lg text-slate-500">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            
+            <div className="p-5 space-y-5">
+              
+              {/* Payment Method Selector */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-800 mb-2">How is the customer paying?</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button 
+                    onClick={() => setSharePaymentMethod("CASH_CHECK")}
+                    className={`p-3 text-center border-2 rounded-xl text-xs font-bold transition-all ${sharePaymentMethod === "CASH_CHECK" ? "border-blue-600 bg-blue-50 text-blue-800" : "border-slate-200 text-slate-500 hover:border-slate-300"}`}
+                  >
+                    Cash / Check / ACH
+                    <span className="block text-[10px] font-medium text-slate-400 mt-1">No Extra Fees</span>
+                  </button>
+                  <button 
+                    onClick={() => setSharePaymentMethod("CREDIT_CARD")}
+                    className={`p-3 text-center border-2 rounded-xl text-xs font-bold transition-all ${sharePaymentMethod === "CREDIT_CARD" ? "border-blue-600 bg-blue-50 text-blue-800" : "border-slate-200 text-slate-500 hover:border-slate-300"}`}
+                  >
+                    Credit Card
+                    <span className="block text-[10px] font-medium text-slate-400 mt-1">+3% Processing Fee</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Share Options */}
+              <div className="pt-2 border-t border-slate-100 space-y-2">
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Send via...</label>
+                
+                <button
+                  onClick={() => handleUpdateFeeAndShare("SMS")}
+                  disabled={isUpdatingFee}
+                  className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition-colors disabled:opacity-50"
+                >
+                  {isUpdatingFee ? "Updating..." : "Send Text Message (SMS)"}
+                </button>
+                
+                <button
+                  onClick={() => handleUpdateFeeAndShare("EMAIL")}
+                  disabled={isUpdatingFee}
+                  className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition-colors disabled:opacity-50"
+                >
+                  {isUpdatingFee ? "Updating..." : "Send Email"}
+                </button>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleUpdateFeeAndShare("NATIVE")}
+                    disabled={isUpdatingFee}
+                    className="flex-1 flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-xl transition-colors disabled:opacity-50 text-xs"
+                  >
+                    {isUpdatingFee ? "Updating..." : "More Options..."}
+                  </button>
+                  
+                  <button
+                    onClick={handleCopyPublicLink}
+                    className="flex-1 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-2.5 rounded-xl transition-colors text-xs"
+                  >
+                    {copiedLink ? "Copied!" : "Copy Link"}
+                  </button>
+                </div>
+
+              </div>
+
+            </div>
           </div>
         </div>
       )}
