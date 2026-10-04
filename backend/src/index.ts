@@ -1,6 +1,6 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes.js';
 import shopRoutes from './routes/shop.routes.js';
 import customerRoutes from './routes/customer.routes.js';
@@ -12,8 +12,7 @@ import vendorRoutes from './routes/vendor.routes.js';
 import expenseRoutes from './routes/expense.routes.js';
 import bankingRoutes from './routes/banking.routes.js';
 import reportRoutes from './routes/report.routes.js';
-
-dotenv.config();
+import { requireAuth } from './middlewares/auth.middleware.js';
 
 const app = express();
 
@@ -26,6 +25,16 @@ app.use(express.json());
 
 // Serve static files from the uploads directory
 app.use('/uploads', express.static('uploads'));
+
+// Global API Auth Middleware
+app.use('/api', (req, res, next) => {
+  // Allow open routes
+  if (req.path.startsWith('/auth/login') || req.path.startsWith('/invoices/public/')) {
+    return next();
+  }
+  // Require auth for everything else
+  return requireAuth(req, res, next);
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
