@@ -26,8 +26,10 @@ app.use(express.json());
 // Serve static files from the uploads directory
 app.use('/uploads', express.static('uploads'));
 
+import type { Request, Response, NextFunction } from 'express';
+
 // Global API Auth Middleware
-app.use('/api', (req, res, next) => {
+app.use('/api', (req: Request, res: Response, next: NextFunction) => {
   // Allow open routes
   if (req.path.startsWith('/auth/login') || req.path.startsWith('/invoices/public/')) {
     return next();
@@ -50,7 +52,7 @@ app.use('/api/banking', bankingRoutes);
 app.use('/api/reports', reportRoutes);
 
 // Health Check
-app.get('/', (req, res) => {
+app.get('/', (req: Request, res: Response) => {
   res.send('Hussain Invoice System API is running...');
 });
 
