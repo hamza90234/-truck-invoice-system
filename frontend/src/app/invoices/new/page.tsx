@@ -35,6 +35,7 @@ interface VehicleOption {
   make: string | null;
   model: string | null;
   year: number | null;
+  mileage: number | null;
 }
 
 interface PartOption {
