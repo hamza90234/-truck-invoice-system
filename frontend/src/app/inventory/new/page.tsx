@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Package, Save } from "lucide-react";
 import { API_URL } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 
 export default function AddPartPage() {
   const router = useRouter();
@@ -32,7 +33,7 @@ export default function AddPartPage() {
     setError("");
 
     try {
-      const res = await fetch(`${API_URL}/api/parts`, {
+      const res = await apiFetch(`${API_URL}/api/parts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)

@@ -8,6 +8,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { API_URL } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 import InvoicePrintSheet from "@/app/components/InvoicePrintSheet";
 
 export default function PublicInvoicePage({ params }: { params: Promise<{ id: string }> }) {
@@ -21,7 +22,7 @@ export default function PublicInvoicePage({ params }: { params: Promise<{ id: st
     const fetchPublicInvoice = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${API_URL}/api/invoices/public/${id}`);
+        const res = await apiFetch(`${API_URL}/api/invoices/public/${id}`);
         if (!res.ok) {
           if (res.status === 404) throw new Error("Invoice not found or link has expired");
           throw new Error("Failed to load invoice");

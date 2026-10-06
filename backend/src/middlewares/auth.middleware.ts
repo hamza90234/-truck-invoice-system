@@ -16,6 +16,10 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction): vo
   }
 
   const token = authHeader.split(' ')[1];
+  if (!token) {
+    res.status(401).json({ error: 'Unauthorized: No token provided' });
+    return;
+  }
 
   try {
     const decoded: any = jwt.verify(token, secret);

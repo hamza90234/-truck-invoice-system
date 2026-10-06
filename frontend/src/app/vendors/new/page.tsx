@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Building2, Save, AlertCircle } from "lucide-react";
 import { API_URL } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 
 export default function NewVendorPage() {
   const router = useRouter();
@@ -25,7 +26,7 @@ export default function NewVendorPage() {
     setError("");
 
     try {
-      const res = await fetch(`${API_URL}/api/vendors`, {
+      const res = await apiFetch(`${API_URL}/api/vendors`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

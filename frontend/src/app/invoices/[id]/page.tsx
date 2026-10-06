@@ -18,6 +18,7 @@ import {
   ExternalLink
 } from "lucide-react";
 import { API_URL } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 import InvoicePrintSheet from "@/app/components/InvoicePrintSheet";
 
 export default function InvoiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -46,7 +47,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
   const fetchInvoice = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_URL}/api/invoices/${id}`);
+      const res = await apiFetch(`${API_URL}/api/invoices/${id}`);
       if (!res.ok) {
         if (res.status === 404) throw new Error("Invoice not found");
         throw new Error("Failed to load invoice");
@@ -139,7 +140,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
         }))
       };
 
-      const res = await fetch(`${API_URL}/api/invoices/${id}`, {
+      const res = await apiFetch(`${API_URL}/api/invoices/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -161,7 +162,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
       return;
     }
     try {
-      const res = await fetch(`${API_URL}/api/invoices/${id}/close`, { method: "POST" });
+      const res = await apiFetch(`${API_URL}/api/invoices/${id}/close`, { method: "POST" });
       if (!res.ok) throw new Error("Failed to close invoice");
       fetchInvoice();
     } catch (err: any) {
@@ -174,7 +175,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
       return;
     }
     try {
-      const res = await fetch(`${API_URL}/api/invoices/${id}`, { method: "DELETE" });
+      const res = await apiFetch(`${API_URL}/api/invoices/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete invoice");
       router.push("/invoices");
     } catch (err: any) {
@@ -194,7 +195,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
     setPaymentError("");
 
     try {
-      const res = await fetch(`${API_URL}/api/invoices/${id}/payments`, {
+      const res = await apiFetch(`${API_URL}/api/invoices/${id}/payments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

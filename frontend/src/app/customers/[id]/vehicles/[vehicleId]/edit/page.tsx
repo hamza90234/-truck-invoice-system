@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Truck, Save, Trash2 } from "lucide-react";
 import { API_URL } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 
 export default function EditVehiclePage({ params }: { params: Promise<{ id: string, vehicleId: string }> }) {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function EditVehiclePage({ params }: { params: Promise<{ id: stri
   useEffect(() => {
     const fetchVehicle = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/vehicles/${vehicleId}`);
+        const res = await apiFetch(`${API_URL}/api/vehicles/${vehicleId}`);
         if (!res.ok) throw new Error("Vehicle not found");
         
         const data = await res.json();
@@ -68,7 +69,7 @@ export default function EditVehiclePage({ params }: { params: Promise<{ id: stri
     setDecodingVin(true);
     setError("");
     try {
-      const res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${vin}?format=json`);
+      const res = await apiFetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${vin}?format=json`);
       if (!res.ok) throw new Error("Failed to contact VIN decoder service.");
       const data = await res.json();
       
@@ -110,7 +111,7 @@ export default function EditVehiclePage({ params }: { params: Promise<{ id: stri
     setError("");
 
     try {
-      const res = await fetch(`${API_URL}/api/vehicles/${vehicleId}`, {
+      const res = await apiFetch(`${API_URL}/api/vehicles/${vehicleId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
@@ -136,7 +137,7 @@ export default function EditVehiclePage({ params }: { params: Promise<{ id: stri
     
     setIsDeleting(true);
     try {
-      const res = await fetch(`${API_URL}/api/vehicles/${vehicleId}`, {
+      const res = await apiFetch(`${API_URL}/api/vehicles/${vehicleId}`, {
         method: "DELETE",
       });
       

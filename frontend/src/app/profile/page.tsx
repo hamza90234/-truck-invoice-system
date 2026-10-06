@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Store, Save } from "lucide-react";
 import { API_URL } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
@@ -36,7 +37,7 @@ export default function ProfilePage() {
       }
 
       try {
-        const res = await fetch(`${API_URL}/api/shop/profile`, {
+        const res = await apiFetch(`${API_URL}/api/shop/profile`, {
           headers: {
             "Authorization": `Bearer ${token}`
           }
@@ -88,7 +89,7 @@ export default function ProfilePage() {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/shop/profile`, {
+      const res = await apiFetch(`${API_URL}/api/shop/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

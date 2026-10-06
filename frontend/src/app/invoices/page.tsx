@@ -17,6 +17,7 @@ import {
   Printer
 } from "lucide-react";
 import { API_URL } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 
 interface InvoiceListItem {
   id: string;
@@ -68,7 +69,7 @@ export default function InvoicesPage() {
         url.searchParams.set("search", searchQuery.trim());
       }
 
-      const res = await fetch(url.toString());
+      const res = await apiFetch(url.toString());
       if (!res.ok) throw new Error("Failed to load invoices");
       const data = await res.json();
       setInvoices(data);

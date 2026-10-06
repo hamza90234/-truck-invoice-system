@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api";
 import { useState, useEffect } from "react";
 import { Check, ArrowRight } from "lucide-react";
 
@@ -34,7 +35,7 @@ export default function TransactionMatcher() {
 
   const fetchData = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/banking/transactions/unmatched`);
+      const res = await apiFetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/banking/transactions/unmatched`);
       if (res.ok) {
         const data = await res.json();
         setTransactions(data.transactions);
@@ -50,7 +51,7 @@ export default function TransactionMatcher() {
   const handleMatch = async (transactionId: string, paymentId: string) => {
     setMatchingId(transactionId);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/banking/match`, {
+      const res = await apiFetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/banking/match`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ transactionId, paymentId })

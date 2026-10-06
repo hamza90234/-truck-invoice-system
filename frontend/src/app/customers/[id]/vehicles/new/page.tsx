@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Truck, Save } from "lucide-react";
 import { API_URL } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 
 export default function AddVehiclePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -37,7 +38,7 @@ export default function AddVehiclePage({ params }: { params: Promise<{ id: strin
     setDecodingVin(true);
     setError("");
     try {
-      const res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${vin}?format=json`);
+      const res = await apiFetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${vin}?format=json`);
       if (!res.ok) throw new Error("Failed to contact VIN decoder service.");
       const data = await res.json();
       
@@ -80,7 +81,7 @@ export default function AddVehiclePage({ params }: { params: Promise<{ id: strin
     setError("");
 
     try {
-      const res = await fetch(`${API_URL}/api/vehicles`, {
+      const res = await apiFetch(`${API_URL}/api/vehicles`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...formData, customerId })

@@ -21,6 +21,7 @@ import {
   Receipt
 } from "lucide-react";
 import { API_URL } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 
 interface DashboardStats {
   activeCustomers: number;
@@ -55,7 +56,7 @@ export default function DashboardPage() {
 
   const fetchStats = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/dashboard/stats`);
+      const res = await apiFetch(`${API_URL}/api/dashboard/stats`);
       if (!res.ok) throw new Error("Failed to load dashboard statistics");
       const data = await res.json();
       setStats(data);

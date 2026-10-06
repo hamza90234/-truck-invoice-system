@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Building2, Pencil, Trash2, Phone, Mail, MapPin, Truck, FileText, MoreVertical } from "lucide-react";
 import { API_URL } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 
 export default function CustomerDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -19,7 +20,7 @@ export default function CustomerDetailsPage({ params }: { params: Promise<{ id: 
   useEffect(() => {
     const fetchCustomer = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/customers/${id}`);
+        const res = await apiFetch(`${API_URL}/api/customers/${id}`);
         if (!res.ok) {
           if (res.status === 404) throw new Error("Customer not found");
           throw new Error("Failed to fetch customer details");
@@ -43,7 +44,7 @@ export default function CustomerDetailsPage({ params }: { params: Promise<{ id: 
     
     setIsDeleting(true);
     try {
-      const res = await fetch(`${API_URL}/api/customers/${id}`, {
+      const res = await apiFetch(`${API_URL}/api/customers/${id}`, {
         method: "DELETE",
       });
       

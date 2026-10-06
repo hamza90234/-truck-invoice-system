@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Building2, Save, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { API_URL } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 
 export default function EditCustomerPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -32,7 +33,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
   useEffect(() => {
     const fetchCustomer = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/customers/${id}`);
+        const res = await apiFetch(`${API_URL}/api/customers/${id}`);
         if (!res.ok) throw new Error("Failed to fetch customer data");
         const data = await res.json();
         
@@ -71,7 +72,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
     setError("");
 
     try {
-      const res = await fetch(`${API_URL}/api/customers/${id}`, {
+      const res = await apiFetch(`${API_URL}/api/customers/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

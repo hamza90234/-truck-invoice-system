@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api";
 import { useState, useEffect } from "react";
 import { BarChart3, TrendingUp, TrendingDown, DollarSign, Users, Building2 } from "lucide-react";
 
@@ -15,8 +16,8 @@ export default function ReportsPage() {
   const fetchReports = async () => {
     try {
       const [pnlRes, arapRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/reports/profit-loss`),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/reports/ar-ap`)
+        apiFetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/reports/profit-loss`),
+        apiFetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/reports/ar-ap`)
       ]);
       
       if (pnlRes.ok && arapRes.ok) {

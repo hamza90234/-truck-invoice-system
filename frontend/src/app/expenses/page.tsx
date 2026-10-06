@@ -16,6 +16,7 @@ import {
   PieChart
 } from "lucide-react";
 import { API_URL } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 
 const EXPENSE_CATEGORIES = [
   "Rent & Lease",
@@ -80,8 +81,8 @@ export default function ExpensesPage() {
       }
 
       const [listRes, summaryRes] = await Promise.all([
-        fetch(url.toString()),
-        fetch(`${API_URL}/api/expenses/summary`).catch(() => null)
+        apiFetch(url.toString()),
+        apiFetch(`${API_URL}/api/expenses/summary`).catch(() => null)
       ]);
 
       if (!listRes.ok) throw new Error("Failed to load expenses");
@@ -155,7 +156,7 @@ export default function ExpensesPage() {
         : `${API_URL}/api/expenses/${editingExpenseId}`;
       const method = modalMode === "create" ? "POST" : "PUT";
 
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -181,7 +182,7 @@ export default function ExpensesPage() {
     }
 
     try {
-      const res = await fetch(`${API_URL}/api/expenses/${id}`, { method: "DELETE" });
+      const res = await apiFetch(`${API_URL}/api/expenses/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete expense");
       fetchExpenses();
     } catch (err: any) {

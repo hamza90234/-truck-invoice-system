@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api";
 import { useState, useEffect } from "react";
 import { Upload, Landmark, CheckCircle, AlertCircle } from "lucide-react";
 import TransactionMatcher from "./components/TransactionMatcher";
@@ -26,7 +27,7 @@ export default function BankingPage() {
     formData.append("file", file);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/banking/upload`, {
+      const res = await apiFetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/banking/upload`, {
         method: "POST",
         body: formData,
         // Don't set Content-Type header, let browser set it with boundary

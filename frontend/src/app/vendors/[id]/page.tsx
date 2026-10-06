@@ -18,6 +18,7 @@ import {
   ShoppingBag
 } from "lucide-react";
 import { API_URL } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 
 interface PurchaseItemLine {
   id: string;
@@ -54,8 +55,8 @@ export default function VendorDetailPage({ params }: { params: Promise<{ id: str
     try {
       setLoading(true);
       const [vendorRes, partsRes] = await Promise.all([
-        fetch(`${API_URL}/api/vendors/${id}`),
-        fetch(`${API_URL}/api/parts`).catch(() => null)
+        apiFetch(`${API_URL}/api/vendors/${id}`),
+        apiFetch(`${API_URL}/api/parts`).catch(() => null)
       ]);
 
       if (!vendorRes.ok) {
@@ -139,7 +140,7 @@ export default function VendorDetailPage({ params }: { params: Promise<{ id: str
           unitCost: parseFloat(item.unitCost) || 0
         }));
 
-      const res = await fetch(`${API_URL}/api/vendors/${id}/purchases`, {
+      const res = await apiFetch(`${API_URL}/api/vendors/${id}/purchases`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -172,7 +173,7 @@ export default function VendorDetailPage({ params }: { params: Promise<{ id: str
     }
 
     try {
-      const res = await fetch(`${API_URL}/api/vendors/purchases/${purchaseId}/pay`, {
+      const res = await apiFetch(`${API_URL}/api/vendors/purchases/${purchaseId}/pay`, {
         method: "PATCH"
       });
 
@@ -192,7 +193,7 @@ export default function VendorDetailPage({ params }: { params: Promise<{ id: str
     setSavingEdit(true);
 
     try {
-      const res = await fetch(`${API_URL}/api/vendors/${id}`, {
+      const res = await apiFetch(`${API_URL}/api/vendors/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -221,7 +222,7 @@ export default function VendorDetailPage({ params }: { params: Promise<{ id: str
     }
 
     try {
-      const res = await fetch(`${API_URL}/api/vendors/${id}`, { method: "DELETE" });
+      const res = await apiFetch(`${API_URL}/api/vendors/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Failed to delete vendor");

@@ -18,6 +18,7 @@ import {
   Truck
 } from "lucide-react";
 import { API_URL } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 
 interface PartOption {
   id: string;
@@ -74,8 +75,8 @@ export default function EditInvoicePage({ params }: { params: Promise<{ id: stri
       try {
         setLoadingData(true);
         const [invRes, partsRes] = await Promise.all([
-          fetch(`${API_URL}/api/invoices/${id}`),
-          fetch(`${API_URL}/api/parts`)
+          apiFetch(`${API_URL}/api/invoices/${id}`),
+          apiFetch(`${API_URL}/api/parts`)
         ]);
 
         if (!invRes.ok) throw new Error("Failed to load invoice");
@@ -150,7 +151,7 @@ export default function EditInvoicePage({ params }: { params: Promise<{ id: stri
     setSavingPart(true);
     setPartError("");
     try {
-      const res = await fetch(`${API_URL}/api/parts`, {
+      const res = await apiFetch(`${API_URL}/api/parts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -308,7 +309,7 @@ export default function EditInvoicePage({ params }: { params: Promise<{ id: stri
         items: [...validLabor, ...validParts]
       };
 
-      const res = await fetch(`${API_URL}/api/invoices/${id}`, {
+      const res = await apiFetch(`${API_URL}/api/invoices/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)

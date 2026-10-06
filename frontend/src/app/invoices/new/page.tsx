@@ -18,6 +18,7 @@ import {
   HelpCircle
 } from "lucide-react";
 import { API_URL } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 
 interface CustomerOption {
   id: string;
@@ -108,10 +109,10 @@ function InvoiceCreateForm() {
       try {
         setLoadingData(true);
         const [custRes, partsRes, nextNumRes, shopRes] = await Promise.all([
-          fetch(`${API_URL}/api/customers`),
-          fetch(`${API_URL}/api/parts`),
-          fetch(`${API_URL}/api/invoices/next-number`),
-          fetch(`${API_URL}/api/shop/profile`).catch(() => null)
+          apiFetch(`${API_URL}/api/customers`),
+          apiFetch(`${API_URL}/api/parts`),
+          apiFetch(`${API_URL}/api/invoices/next-number`),
+          apiFetch(`${API_URL}/api/shop/profile`).catch(() => null)
         ]);
 
         if (custRes.ok) {
@@ -158,7 +159,7 @@ function InvoiceCreateForm() {
     setSavingPart(true);
     setPartError("");
     try {
-      const res = await fetch(`${API_URL}/api/parts`, {
+      const res = await apiFetch(`${API_URL}/api/parts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -349,7 +350,7 @@ function InvoiceCreateForm() {
         items: [...validLabor, ...validParts]
       };
 
-      const res = await fetch(`${API_URL}/api/invoices`, {
+      const res = await apiFetch(`${API_URL}/api/invoices`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)

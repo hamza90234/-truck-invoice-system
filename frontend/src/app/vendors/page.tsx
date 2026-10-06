@@ -13,6 +13,7 @@ import {
   AlertCircle 
 } from "lucide-react";
 import { API_URL } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 
 interface Vendor {
   id: string;
@@ -34,7 +35,7 @@ export default function VendorsPage() {
   const fetchVendors = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_URL}/api/vendors`);
+      const res = await apiFetch(`${API_URL}/api/vendors`);
       if (!res.ok) throw new Error("Failed to load vendors");
       const data = await res.json();
       setVendors(data.vendors || []);

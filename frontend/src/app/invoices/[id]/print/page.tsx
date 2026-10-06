@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { ArrowLeft, Printer, AlertCircle, Info } from "lucide-react";
 import { API_URL } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 import InvoicePrintSheet from "@/app/components/InvoicePrintSheet";
 
 export default function InvoicePrintPage({ params }: { params: Promise<{ id: string }> }) {
@@ -17,7 +18,7 @@ export default function InvoicePrintPage({ params }: { params: Promise<{ id: str
     const fetchInvoice = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${API_URL}/api/invoices/${id}`);
+        const res = await apiFetch(`${API_URL}/api/invoices/${id}`);
         if (!res.ok) {
           if (res.status === 404) throw new Error("Invoice not found");
           throw new Error("Failed to load invoice");

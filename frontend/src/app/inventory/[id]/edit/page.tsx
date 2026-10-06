@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Package, Save, Trash2 } from "lucide-react";
 import { API_URL } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 
 export default function EditPartPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -28,7 +29,7 @@ export default function EditPartPage({ params }: { params: Promise<{ id: string 
   useEffect(() => {
     const fetchPart = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/parts/${id}`);
+        const res = await apiFetch(`${API_URL}/api/parts/${id}`);
         if (!res.ok) throw new Error("Part not found");
         
         const data = await res.json();
@@ -62,7 +63,7 @@ export default function EditPartPage({ params }: { params: Promise<{ id: string 
     setError("");
 
     try {
-      const res = await fetch(`${API_URL}/api/parts/${id}`, {
+      const res = await apiFetch(`${API_URL}/api/parts/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
@@ -88,7 +89,7 @@ export default function EditPartPage({ params }: { params: Promise<{ id: string 
     
     setIsDeleting(true);
     try {
-      const res = await fetch(`${API_URL}/api/parts/${id}`, {
+      const res = await apiFetch(`${API_URL}/api/parts/${id}`, {
         method: "DELETE",
       });
       

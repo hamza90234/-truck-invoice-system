@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Package, Search, Plus, AlertTriangle, ArrowRight } from "lucide-react";
 import { API_URL } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 
 interface Part {
   id: string;
@@ -25,7 +26,7 @@ export default function InventoryPage() {
   useEffect(() => {
     const fetchParts = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/parts`);
+        const res = await apiFetch(`${API_URL}/api/parts`);
         if (!res.ok) throw new Error("Failed to fetch inventory");
         const data = await res.json();
         setParts(data);

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Building2, Save, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { API_URL } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 
 export default function NewCustomerPage() {
   const router = useRouter();
@@ -36,7 +37,7 @@ export default function NewCustomerPage() {
     setError("");
 
     try {
-      const res = await fetch(`${API_URL}/api/customers`, {
+      const res = await apiFetch(`${API_URL}/api/customers`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
