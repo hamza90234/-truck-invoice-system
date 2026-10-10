@@ -675,7 +675,7 @@ export const emailInvoice = async (req: Request, res: Response): Promise<void> =
     // Using window.location.origin equivalent in emails would be the shop website or a configured URL
     // We'll use the frontend URL from an env var, or fallback
     const frontendUrl = process.env.FRONTEND_URL || 'https://app.ajroadservicerepair.com';
-    const publicLink = `${frontendUrl}/public/invoice/${id}`;
+    const publicLink = `${frontendUrl}/i/${id}`;
     
     const docType = invoice.isEstimate ? 'Estimate' : 'Invoice';
     const defaultSubject = subject || `${shopProfile?.shopName || 'AJ Truck Repair'} - ${docType} ${invoice.invoiceNumber}`;
