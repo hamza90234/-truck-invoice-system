@@ -8,7 +8,8 @@ import {
   deleteInvoice,
   recordPayment,
   closeInvoice,
-  getPublicInvoice
+  getPublicInvoice,
+  emailInvoice
 } from '../controllers/invoice.controller.js';
 
 const router = Router();
@@ -27,5 +28,6 @@ router.put('/:id', updateInvoice);
 router.delete('/:id', deleteInvoice);
 router.post('/:id/payments', recordPayment);
 router.post('/:id/close', closeInvoice);
+router.post('/:id/email', emailInvoice);
 
 export default router;

@@ -15,7 +15,8 @@ import {
   Check, 
   X,
   AlertCircle,
-  ExternalLink
+  ExternalLink,
+  Mail
 } from "lucide-react";
 import { API_URL } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
@@ -43,6 +44,9 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharePaymentMethod, setSharePaymentMethod] = useState("CASH_CHECK");
   const [isUpdatingFee, setIsUpdatingFee] = useState(false);
+
+  // Email State
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   const fetchInvoice = async () => {
     try {
@@ -183,6 +187,39 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
     }
   };
 
+  const handleEmailInvoice = async () => {
+    if (!invoice?.customer?.email) {
+      alert("This customer does not have an email address on file.");
+      return;
+    }
+    
+    if (!window.confirm(`Send this invoice to ${invoice.customer.email}?`)) {
+      return;
+    }
+
+    setSendingEmail(true);
+    try {
+      const res = await apiFetch(`${API_URL}/api/invoices/${id}/email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: invoice.customer.email
+        })
+      });
+      
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to send email");
+      }
+      
+      alert("Invoice emailed successfully!");
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
   const handleRecordPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     const amountNum = parseFloat(paymentAmount);
@@ -286,6 +323,16 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
           >
             <Printer className="h-4 w-4" />
             Print / PDF
+          </button>
+
+          <button
+            type="button"
+            onClick={handleEmailInvoice}
+            disabled={sendingEmail}
+            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold px-3.5 py-2 rounded-lg transition-colors shadow-sm"
+          >
+            <Mail className="h-4 w-4" />
+            {sendingEmail ? "Sending..." : "Email Invoice"}
           </button>
 
           {/* Standalone Print Sheet View */}
