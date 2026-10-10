@@ -1,10 +1,8 @@
 import 'dotenv/config';
-
 if (!process.env.JWT_SECRET) {
-  console.error("FATAL ERROR: JWT_SECRET is not defined in environment variables.");
-  process.exit(1);
+    console.error("FATAL ERROR: JWT_SECRET is not defined in environment variables.");
+    process.exit(1);
 }
-
 import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/auth.routes.js';
@@ -20,44 +18,33 @@ import bankingRoutes from './routes/banking.routes.js';
 import reportRoutes from './routes/report.routes.js';
 import { requireAuth } from './middlewares/auth.middleware.js';
 import rateLimit from 'express-rate-limit';
-import type { Request, Response, NextFunction } from 'express';
-
 const app = express();
-
 app.set('trust proxy', 1);
-
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
-  credentials: true
+    origin: process.env.FRONTEND_URL || '*',
+    credentials: true
 }));
 app.use(express.json());
-
 // Serve static files from the uploads directory
 app.use('/uploads', express.static('uploads'));
-
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: { error: 'Too many login attempts, please try again later.' }
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    message: { error: 'Too many login attempts, please try again later.' }
 });
-
 // Global API Auth Middleware
-app.use('/api', (req: Request, res: Response, next: NextFunction) => {
-  if (req.method === 'OPTIONS') return next();
-  
-  const isLogin = req.method === 'POST' && req.path === '/auth/login';
-  const isPublicInvoice = req.method === 'GET' && req.path.startsWith('/invoices/public/');
-  
-  if (isLogin || isPublicInvoice) {
-    return next();
-  }
-  
-  return requireAuth(req, res, next);
+app.use('/api', (req, res, next) => {
+    if (req.method === 'OPTIONS')
+        return next();
+    const isLogin = req.method === 'POST' && req.path === '/auth/login';
+    const isPublicInvoice = req.method === 'GET' && req.path.startsWith('/invoices/public/');
+    if (isLogin || isPublicInvoice) {
+        return next();
+    }
+    return requireAuth(req, res, next);
 });
-
 app.use('/api/auth/login', loginLimiter);
-
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/shop', shopRoutes);
@@ -70,14 +57,12 @@ app.use('/api/vendors', vendorRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/banking', bankingRoutes);
 app.use('/api/reports', reportRoutes);
-
 // Health Check
-app.get('/', (req: Request, res: Response) => {
-  res.send('AJ Truck Repair System API is running...');
+app.get('/', (req, res) => {
+    res.send('Hussain Invoice System API is running...');
 });
-
 const PORT = process.env.PORT || 5000;
-
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });
+//# sourceMappingURL=index.js.map

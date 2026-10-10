@@ -30,9 +30,9 @@ export default function InvoicePrintSheet({ invoice, publicUrl, hideQrCode = fal
   const isPaid = balance <= 0 || invoice.status === "PAID";
 
   return (
-    <div className="bg-white text-slate-800 w-full max-w-4xl mx-auto p-8 md:p-12 shadow-xs border border-slate-200 print:shadow-none print:border-none print:p-0">
+    <div className="bg-white text-slate-800 w-full max-w-4xl mx-auto p-4 sm:p-8 md:p-12 shadow-xs border border-slate-200 print:shadow-none print:border-none print:p-0">
       {/* HEADER */}
-      <div className="flex justify-between items-start border-b border-slate-200 pb-8 mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start gap-6 border-b border-slate-200 pb-6 mb-6 sm:pb-8 sm:mb-8">
         <div>
           {shop.logoUrl ? (
             <img src={shop.logoUrl} alt="Logo" className="h-16 object-contain mb-4" />
@@ -44,16 +44,15 @@ export default function InvoicePrintSheet({ invoice, publicUrl, hideQrCode = fal
           <div className="text-sm text-slate-500 space-y-1">
             {shop.address && <p>{shop.address}</p>}
             {shop.phone && <p>{shop.phone}</p>}
-            {shop.email && <p>{shop.email}</p>}
             {shop.website && <p>{shop.website}</p>}
           </div>
         </div>
 
-        <div className="text-right">
-          <h2 className="text-4xl font-light text-slate-900 mb-4 uppercase tracking-widest">
+        <div className="text-left sm:text-right w-full sm:w-auto">
+          <h2 className="text-3xl sm:text-4xl font-light text-slate-900 mb-4 uppercase tracking-widest">
             {invoice.isEstimate ? "Estimate" : "Invoice"}
           </h2>
-          <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm text-right justify-end">
+          <div className="grid grid-cols-2 gap-x-4 sm:gap-x-8 gap-y-2 text-sm text-left sm:text-right sm:justify-end">
             <span className="text-slate-500 font-medium">{invoice.isEstimate ? "Estimate No:" : "Invoice No:"}</span>
             <span className="font-semibold text-slate-900">{invoice.invoiceNumber || "N/A"}</span>
             
@@ -80,7 +79,7 @@ export default function InvoicePrintSheet({ invoice, publicUrl, hideQrCode = fal
       </div>
 
       {/* BILLING & VEHICLE INFO */}
-      <div className="grid grid-cols-2 gap-12 mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-12 mb-8 sm:mb-10">
         <div>
           <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-200 pb-2 mb-3">
             Bill To
@@ -124,8 +123,8 @@ export default function InvoicePrintSheet({ invoice, publicUrl, hideQrCode = fal
       )}
 
       {/* LINE ITEMS */}
-      <div className="mb-10">
-        <table className="w-full text-sm text-left">
+      <div className="mb-8 sm:mb-10 overflow-x-auto w-full">
+        <table className="w-full text-sm text-left min-w-[500px]">
           <thead>
             <tr className="border-b-2 border-slate-900">
               <th className="py-3 font-semibold text-slate-900">Description</th>
@@ -209,8 +208,8 @@ export default function InvoicePrintSheet({ invoice, publicUrl, hideQrCode = fal
       </div>
 
       {/* FOOTER */}
-      <div className="border-t border-slate-200 pt-8 text-xs text-slate-500">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="border-t border-slate-200 pt-6 sm:pt-8 text-xs text-slate-500">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
           <div>
             <h4 className="font-bold text-slate-700 uppercase tracking-wider mb-2">Terms & Conditions</h4>
             <p className="leading-relaxed">
@@ -227,7 +226,7 @@ export default function InvoicePrintSheet({ invoice, publicUrl, hideQrCode = fal
       </div>
 
       {/* SIGNATURES */}
-      <div className="mt-16 pt-8 border-t border-slate-200 grid grid-cols-2 gap-12">
+      <div className="mt-10 sm:mt-16 pt-6 sm:pt-8 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-12">
         <div>
           <div className="border-b border-slate-400 h-10 mb-2"></div>
           <p className="text-xs text-slate-500">Authorized Signature</p>

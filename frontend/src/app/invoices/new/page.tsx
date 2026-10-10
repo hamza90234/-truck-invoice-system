@@ -91,6 +91,9 @@ function InvoiceCreateForm() {
   const [status, setStatus] = useState("UNPAID");
   const [notes, setNotes] = useState("");
   const [warrantyInfo, setWarrantyInfo] = useState("30-day labor and 90-day parts warranty from date of repair.");
+  
+  const [shopRate, setShopRate] = useState("120");
+  const [roadRate, setRoadRate] = useState("150");
 
   // Quick Part Add Modal
   const [showPartModal, setShowPartModal] = useState(false);
@@ -141,7 +144,24 @@ function InvoiceCreateForm() {
           const shopData = await shopRes.json();
           if (shopData.defaultTaxRate !== undefined) setTaxRate(shopData.defaultTaxRate.toString());
           if (shopData.defaultPaymentTerms) setPaymentTerms(shopData.defaultPaymentTerms);
-      if (shopData.creditCardFeePct !== undefined) setCreditCardFeePct(Number(shopData.creditCardFeePct));
+          if (shopData.creditCardFeePct !== undefined) setCreditCardFeePct(Number(shopData.creditCardFeePct));
+          
+          if (shopData.invoiceSettings) {
+            try {
+              const parsed = JSON.parse(shopData.invoiceSettings);
+              if (parsed.defaultCustomerNote) setNotes(parsed.defaultCustomerNote);
+              if (parsed.defaultWarranty) setWarrantyInfo(parsed.defaultWarranty);
+              if (parsed.defaultLaborRateShop) {
+                setShopRate(parsed.defaultLaborRateShop.toString());
+                setLaborItems([
+                  { id: "labor-1", description: "Shop Service", quantity: "1", rate: parsed.defaultLaborRateShop.toString() }
+                ]);
+              }
+              if (parsed.defaultLaborRateRoad) setRoadRate(parsed.defaultLaborRateRoad.toString());
+            } catch (e) {
+              setWarrantyInfo(shopData.invoiceSettings);
+            }
+          }
         }
       } catch (err: any) {
         console.error(err);
@@ -220,10 +240,15 @@ function InvoiceCreateForm() {
   };
 
   // Labor Row Actions
-  const addLaborRow = () => {
+  const addLaborRow = (type: 'shop' | 'road') => {
     setLaborItems([
       ...laborItems,
-      { id: `labor-${Date.now()}`, description: "", quantity: "1", rate: "120" }
+      { 
+        id: `labor-${Date.now()}`, 
+        description: type === 'shop' ? "Shop Service" : "Road Service", 
+        quantity: "1", 
+        rate: type === 'shop' ? shopRate : roadRate 
+      }
     ]);
   };
 
@@ -570,13 +595,22 @@ function InvoiceCreateForm() {
               <Wrench className="h-4 w-4 text-blue-600" />
               Labor / Service Performed
             </h2>
-            <button
-              type="button"
-              onClick={addLaborRow}
-              className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 px-2.5 py-1 rounded-lg transition-colors"
-            >
-              <Plus className="h-3.5 w-3.5" /> Add Labor
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => addLaborRow('shop')}
+                className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 px-2.5 py-1 rounded-lg transition-colors"
+              >
+                <Plus className="h-3.5 w-3.5" /> Shop
+              </button>
+              <button
+                type="button"
+                onClick={() => addLaborRow('road')}
+                className="flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg transition-colors"
+              >
+                <Plus className="h-3.5 w-3.5" /> Road
+              </button>
+            </div>
           </div>
 
           <div className="space-y-3">

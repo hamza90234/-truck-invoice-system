@@ -423,7 +423,7 @@ export const updateInvoice = async (req: Request, res: Response): Promise<void> 
 
     const totalAmount = Number((subtotal + taxAmount + feeAmount).toFixed(2));
     const amountPaid = Number(existingInvoice.amountPaid);
-    const balance = Number((totalAmount - amountPaid).toFixed(2));
+    const balance = Number(Math.max(0, totalAmount - amountPaid).toFixed(2));
 
     // Determine status
     let finalStatus = status || existingInvoice.status;

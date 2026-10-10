@@ -87,9 +87,9 @@ export default function Navbar() {
         <div className="flex items-center gap-6">
           <Link href="/dashboard" className="text-lg font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
             <span className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-black text-base shadow-sm">
-              H
+              AJ
             </span>
-            <span>Hussain Invoice</span>
+            <span>AJ Truck Repair</span>
           </Link>
           
           <div className="flex items-center gap-1 ml-4">

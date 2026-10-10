@@ -50,7 +50,7 @@ export default function LoginPage() {
           </div>
           
           <h2 className="text-2xl font-bold text-center text-slate-900 mb-2 tracking-tight">Welcome Back</h2>
-          <p className="text-slate-500 text-center mb-8 text-sm">Sign in to manage your truck repair shop</p>
+          <p className="text-slate-500 text-center mb-8 text-sm">Sign in to AJ Truck Repair and mobile road service LLC</p>
           
           {error && (
             <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-lg">

@@ -26,12 +26,12 @@ import Navbar from "./components/Navbar";
 import AuthGuard from "./components/AuthGuard";
 
 export const metadata: Metadata = {
-  title: "Hussain Invoice",
-  description: "Manage your truck repair shop easily",
+  title: "AJ Truck Repair",
+  description: "AJ Truck Repair and mobile road service LLC",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Hussain Invoice",
+    title: "AJ Truck Repair",
   },
   formatDetection: {
     telephone: false, // Prevents iOS styling numbers as links
