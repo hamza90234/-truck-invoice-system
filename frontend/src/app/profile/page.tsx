@@ -25,6 +25,10 @@ export default function ProfilePage() {
     defaultPaymentTerms: "Net 30",
     creditCardFeePct: 3.00,
     invoiceSettings: "",
+    defaultCustomerNote: "",
+    defaultWarranty: "30-day labor and 90-day parts warranty from date of repair.",
+    defaultLaborRateShop: 120,
+    defaultLaborRateRoad: 150,
     password: "",
   });
 
@@ -53,6 +57,24 @@ export default function ProfilePage() {
         }
 
         const data = await res.json();
+
+        let parsedSettings = {
+          defaultCustomerNote: "",
+          defaultWarranty: "30-day labor and 90-day parts warranty from date of repair.",
+          defaultLaborRateShop: 120,
+          defaultLaborRateRoad: 150
+        };
+
+        if (data.invoiceSettings) {
+          try {
+            const parsed = JSON.parse(data.invoiceSettings);
+            parsedSettings = { ...parsedSettings, ...parsed };
+          } catch (e) {
+            // fallback if it was a plain string before
+            parsedSettings.defaultWarranty = data.invoiceSettings;
+          }
+        }
+
         setFormData({
           shopName: data.shopName || "",
           address: data.address || "",
@@ -65,6 +87,10 @@ export default function ProfilePage() {
           defaultPaymentTerms: data.defaultPaymentTerms || "Net 30",
           creditCardFeePct: data.creditCardFeePct || 3.00,
           invoiceSettings: data.invoiceSettings || "",
+          defaultCustomerNote: parsedSettings.defaultCustomerNote,
+          defaultWarranty: parsedSettings.defaultWarranty,
+          defaultLaborRateShop: parsedSettings.defaultLaborRateShop,
+          defaultLaborRateRoad: parsedSettings.defaultLaborRateRoad,
           password: "",
         });
       } catch (err: any) {
@@ -89,6 +115,13 @@ export default function ProfilePage() {
 
     try {
       const token = localStorage.getItem("token");
+      const settingsObj = {
+        defaultCustomerNote: formData.defaultCustomerNote,
+        defaultWarranty: formData.defaultWarranty,
+        defaultLaborRateShop: Number(formData.defaultLaborRateShop),
+        defaultLaborRateRoad: Number(formData.defaultLaborRateRoad)
+      };
+
       const res = await apiFetch(`${API_URL}/api/shop/profile`, {
         method: "PUT",
         headers: {
@@ -98,7 +131,8 @@ export default function ProfilePage() {
         body: JSON.stringify({
           ...formData,
           defaultTaxRate: parseFloat(formData.defaultTaxRate as any),
-          creditCardFeePct: parseFloat(formData.creditCardFeePct as any)
+          creditCardFeePct: parseFloat(formData.creditCardFeePct as any),
+          invoiceSettings: JSON.stringify(settingsObj)
         }),
       });
 
@@ -224,9 +258,26 @@ export default function ProfilePage() {
             </div>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Default Shop Labor Rate ($/hr)</label>
+              <input type="number" step="1" name="defaultLaborRateShop" value={formData.defaultLaborRateShop} onChange={handleChange} className="w-full bg-white border border-slate-300 text-slate-900 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm" />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Default Road Service Labor Rate ($/hr)</label>
+              <input type="number" step="1" name="defaultLaborRateRoad" value={formData.defaultLaborRateRoad} onChange={handleChange} className="w-full bg-white border border-slate-300 text-slate-900 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm" />
+            </div>
+          </div>
+
           <div className="mt-6">
-            <label className="block text-sm font-medium text-slate-700 mb-2">Invoice Notes / Footer Settings</label>
-            <textarea name="invoiceSettings" rows={4} value={formData.invoiceSettings} onChange={handleChange} placeholder="e.g. Thank you for your business! All parts come with a 30-day warranty." className="w-full bg-white border border-slate-300 text-slate-900 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm resize-y"></textarea>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Default Customer / Repair Note</label>
+            <textarea name="defaultCustomerNote" rows={3} value={formData.defaultCustomerNote} onChange={handleChange} placeholder="e.g. Standard shop fees applied." className="w-full bg-white border border-slate-300 text-slate-900 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm resize-y"></textarea>
+          </div>
+
+          <div className="mt-6">
+            <label className="block text-sm font-medium text-slate-700 mb-2">Default Warranty Terms</label>
+            <textarea name="defaultWarranty" rows={3} value={formData.defaultWarranty} onChange={handleChange} placeholder="e.g. 30-day labor and 90-day parts warranty from date of repair." className="w-full bg-white border border-slate-300 text-slate-900 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm resize-y"></textarea>
           </div>
         </div>
         
