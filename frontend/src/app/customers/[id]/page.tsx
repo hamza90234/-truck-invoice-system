@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Building2, Pencil, Trash2, Phone, Mail, MapPin, Truck, FileText, MoreVertical } from "lucide-react";
+import { ArrowLeft, Building2, Pencil, Trash2, Phone, Mail, MapPin, Truck, FileText, MoreVertical, CheckCircle2, XCircle, Clock, AlertTriangle } from "lucide-react";
 import { API_URL } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
 
@@ -16,6 +16,13 @@ export default function CustomerDetailsPage({ params }: { params: Promise<{ id: 
   const [error, setError] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+  // Approval / Rejection states
+  const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [actionSuccess, setActionSuccess] = useState("");
 
   useEffect(() => {
     const fetchCustomer = async () => {
@@ -36,6 +43,48 @@ export default function CustomerDetailsPage({ params }: { params: Promise<{ id: 
 
     fetchCustomer();
   }, [id]);
+
+  const handleApprove = async () => {
+    try {
+      setIsApproving(true);
+      const res = await apiFetch(`${API_URL}/api/customers/${id}/approve`, {
+        method: "PATCH"
+      });
+      if (!res.ok) throw new Error("Failed to approve customer");
+      const updated = await res.json();
+      setCustomer((prev: any) => ({ ...prev, status: "APPROVED", rejectionReason: null }));
+      setActionSuccess("Customer approved successfully! Account is now active for billing.");
+      setTimeout(() => setActionSuccess(""), 4000);
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
+  const handleReject = async () => {
+    try {
+      setIsRejecting(true);
+      const res = await apiFetch(`${API_URL}/api/customers/${id}/reject`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: rejectionReason.trim() })
+      });
+      if (!res.ok) throw new Error("Failed to reject customer");
+      setCustomer((prev: any) => ({ 
+        ...prev, 
+        status: "REJECTED", 
+        rejectionReason: rejectionReason.trim() || "Application rejected by shop administrator" 
+      }));
+      setShowRejectModal(false);
+      setActionSuccess("Customer registration marked as rejected.");
+      setTimeout(() => setActionSuccess(""), 4000);
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setIsRejecting(false);
+    }
+  };
 
   const handleDelete = async () => {
     if (!window.confirm("Are you sure you want to delete this customer? This action cannot be undone.")) {
@@ -143,13 +192,115 @@ export default function CustomerDetailsPage({ params }: { params: Promise<{ id: 
       </div>
 
       <div className="md:px-8">
+        {/* Action Success Toast */}
+        {actionSuccess && (
+          <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl flex items-center gap-3 text-sm font-semibold animate-in fade-in">
+            <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+            <span>{actionSuccess}</span>
+          </div>
+        )}
+
+        {/* Pending Review Banner */}
+        {customer.status === "PENDING" && (
+          <div className="mb-6 p-5 sm:p-6 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl shadow-sm">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-200 text-amber-900">
+                  <Clock className="h-3.5 w-3.5" />
+                  Pending Self-Onboarding Application
+                </div>
+                <h3 className="text-lg font-bold text-slate-900">Customer Registration Needs Review</h3>
+                <p className="text-sm text-slate-600">
+                  This customer submitted their information online. Review details, adjust payment terms if needed, and accept or reject.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <Link
+                  href={`/customers/${id}/edit`}
+                  className="flex items-center gap-1.5 px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm rounded-xl border border-slate-300 shadow-sm transition"
+                >
+                  <Pencil className="h-4 w-4" />
+                  Edit Info
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={() => setShowRejectModal(true)}
+                  disabled={isRejecting || isApproving}
+                  className="flex items-center gap-1.5 px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold text-sm rounded-xl border border-rose-200 shadow-sm transition disabled:opacity-50 cursor-pointer"
+                >
+                  <XCircle className="h-4 w-4" />
+                  Reject
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleApprove}
+                  disabled={isApproving || isRejecting}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-md shadow-emerald-600/20 transition disabled:opacity-50 cursor-pointer"
+                >
+                  {isApproving ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  ) : (
+                    <CheckCircle2 className="h-4 w-4" />
+                  )}
+                  <span>Accept & Approve</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Rejected Banner */}
+        {customer.status === "REJECTED" && (
+          <div className="mb-6 p-4 sm:p-5 bg-rose-50 border border-rose-200 rounded-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <XCircle className="h-6 w-6 text-rose-600 shrink-0 mt-0.5" />
+              <div>
+                <div className="text-sm font-bold text-rose-900">Application Rejected</div>
+                <p className="text-xs text-rose-700 mt-0.5">
+                  Reason: {customer.rejectionReason || "No specific reason provided."}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleApprove}
+              disabled={isApproving}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-slate-800 hover:bg-slate-100 font-semibold text-xs rounded-xl border border-slate-300 shadow-sm transition self-start sm:self-auto cursor-pointer"
+            >
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+              Re-Approve Customer
+            </button>
+          </div>
+        )}
+
         {/* Desktop Profile Header (Hidden on Mobile) */}
         <div className="hidden md:flex items-center gap-4 mb-8">
           <div className="h-16 w-16 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
             <Building2 className="h-8 w-8" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">{customer.companyName}</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold tracking-tight text-slate-900">{customer.companyName}</h1>
+              {customer.status === "PENDING" && (
+                <span className="bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded text-xs font-bold border border-amber-200">
+                  Pending Approval
+                </span>
+              )}
+              {customer.status === "REJECTED" && (
+                <span className="bg-rose-100 text-rose-800 px-2.5 py-0.5 rounded text-xs font-bold border border-rose-200">
+                  Rejected
+                </span>
+              )}
+              {customer.status === "APPROVED" && (
+                <span className="bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded text-xs font-bold border border-emerald-200">
+                  Active
+                </span>
+              )}
+            </div>
             <div className="flex items-center text-slate-500 mt-1 gap-3 text-sm">
               {customer.customerType && (
                 <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs font-medium border border-slate-200">
@@ -410,6 +561,59 @@ export default function CustomerDetailsPage({ params }: { params: Promise<{ id: 
           </div>
         </div>
       </div>
+
+      {/* Reject Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-slate-200">
+            <div className="flex items-center gap-3 text-rose-600">
+              <div className="h-10 w-10 rounded-xl bg-rose-50 flex items-center justify-center shrink-0">
+                <AlertTriangle className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Reject Application</h3>
+                <p className="text-xs text-slate-500">This will mark the customer as rejected.</p>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                Reason for Rejection (Optional)
+              </label>
+              <textarea
+                rows={3}
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                placeholder="e.g. Duplicate registration, out of service area, invalid USDOT number..."
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-500 focus:outline-none transition resize-none"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowRejectModal(false)}
+                className="px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleReject}
+                disabled={isRejecting}
+                className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition shadow-lg shadow-rose-600/20 disabled:opacity-50 cursor-pointer"
+              >
+                {isRejecting ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                ) : (
+                  <XCircle className="h-4 w-4" />
+                )}
+                <span>Confirm Rejection</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

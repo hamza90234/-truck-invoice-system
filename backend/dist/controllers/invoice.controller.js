@@ -356,7 +356,7 @@ export const updateInvoice = async (req, res) => {
             : Number(existingInvoice.creditCardFee);
         const totalAmount = Number((subtotal + taxAmount + feeAmount).toFixed(2));
         const amountPaid = Number(existingInvoice.amountPaid);
-        const balance = Number((totalAmount - amountPaid).toFixed(2));
+        const balance = Number(Math.max(0, totalAmount - amountPaid).toFixed(2));
         // Determine status
         let finalStatus = status || existingInvoice.status;
         if (balance <= 0 && amountPaid > 0) {
@@ -535,6 +535,92 @@ export const closeInvoice = async (req, res) => {
     catch (error) {
         console.error('Error closing invoice:', error);
         res.status(500).json({ error: error.message || 'Failed to close invoice' });
+    }
+};
+// Email Invoice
+export const emailInvoice = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const { to, subject, message } = req.body;
+        if (!to) {
+            res.status(400).json({ error: 'Recipient email (to) is required' });
+            return;
+        }
+        const invoice = await prisma.invoice.findUnique({
+            where: { id },
+            include: {
+                customer: true,
+                vehicle: true
+            }
+        });
+        if (!invoice) {
+            res.status(404).json({ error: 'Invoice not found' });
+            return;
+        }
+        const shopProfile = await prisma.shopProfile.findFirst();
+        // Dynamically import nodemailer so we don't crash the server if it's not installed yet
+        let nodemailer;
+        try {
+            nodemailer = await import('nodemailer');
+        }
+        catch (err) {
+            res.status(500).json({ error: 'nodemailer is not installed. Please run npm install nodemailer in the backend directory.' });
+            return;
+        }
+        const transporter = nodemailer.createTransport({
+            host: process.env.SMTP_HOST || 'smtp.gmail.com',
+            port: Number(process.env.SMTP_PORT) || 587,
+            secure: false, // true for 465, false for other ports
+            auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS,
+            },
+        });
+        // We send a nice link to the public invoice view
+        // Using window.location.origin equivalent in emails would be the shop website or a configured URL
+        // We'll use the frontend URL from an env var, or fallback
+        const frontendUrl = process.env.FRONTEND_URL || 'https://app.ajroadservicerepair.com';
+        const publicLink = `${frontendUrl}/i/${id}`;
+        const docType = invoice.isEstimate ? 'Estimate' : 'Invoice';
+        const defaultSubject = subject || `${shopProfile?.shopName || 'AJ Truck Repair'} - ${docType} ${invoice.invoiceNumber}`;
+        const defaultMessage = message || `
+      Hello ${invoice.customer?.companyName || 'Customer'},
+      
+      Here is your ${docType} (${invoice.invoiceNumber}) from ${shopProfile?.shopName || 'AJ Truck Repair'}.
+      
+      You can view, print, or download your ${docType} securely online at:
+      ${publicLink}
+      
+      Total Amount: $${Number(invoice.totalAmount).toFixed(2)}
+      Balance Due: $${Number(invoice.balance).toFixed(2)}
+      
+      Thank you for your business!
+    `;
+        const htmlMessage = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+        <h2 style="color: #2563eb;">${shopProfile?.shopName || 'AJ Truck Repair'}</h2>
+        <p>Hello <strong>${invoice.customer?.companyName || 'Customer'}</strong>,</p>
+        <p>Here is your ${docType} (<strong>${invoice.invoiceNumber}</strong>).</p>
+        <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+          <h3 style="margin-top: 0; color: #475569;">Amount Due</h3>
+          <p style="font-size: 24px; font-weight: bold; color: #0f172a; margin: 10px 0;">$${Number(invoice.balance).toFixed(2)}</p>
+          <a href="${publicLink}" style="display: inline-block; background-color: #2563eb; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; margin-top: 10px;">View ${docType}</a>
+        </div>
+        <p style="white-space: pre-wrap;">${message || 'Thank you for your business!'}</p>
+      </div>
+    `;
+        const info = await transporter.sendMail({
+            from: `"${shopProfile?.shopName || 'AJ Truck Repair'}" <${process.env.SMTP_USER}>`,
+            to,
+            subject: defaultSubject,
+            text: defaultMessage,
+            html: htmlMessage,
+        });
+        res.status(200).json({ success: true, messageId: info.messageId });
+    }
+    catch (error) {
+        console.error('Error sending email:', error);
+        res.status(500).json({ error: error.message || 'Failed to send email' });
     }
 };
 //# sourceMappingURL=invoice.controller.js.map

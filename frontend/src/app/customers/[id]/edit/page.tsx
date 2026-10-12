@@ -28,6 +28,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
     customerType: "",
     paymentTerms: "",
     notes: "",
+    status: "APPROVED",
   });
 
   useEffect(() => {
@@ -51,6 +52,7 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
           customerType: data.customerType || "",
           paymentTerms: data.paymentTerms || "",
           notes: data.notes || "",
+          status: data.status || "APPROVED",
         });
       } catch (err: any) {
         setError(err.message);
@@ -171,6 +173,20 @@ export default function EditCustomerPage({ params }: { params: Promise<{ id: str
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Payment Terms</label>
               <input type="text" name="paymentTerms" value={formData.paymentTerms} onChange={handleChange} placeholder="e.g. Net 30, Due on Receipt" className="w-full bg-white border border-slate-300 text-slate-900 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm" />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Account Status</label>
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleChange as any}
+                className="w-full bg-white border border-slate-300 text-slate-900 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm font-medium"
+              >
+                <option value="APPROVED">Active (Approved)</option>
+                <option value="PENDING">Pending Approval</option>
+                <option value="REJECTED">Rejected</option>
+              </select>
             </div>
           </div>
         </div>

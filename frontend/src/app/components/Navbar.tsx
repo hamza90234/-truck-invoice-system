@@ -24,8 +24,8 @@ export default function Navbar() {
   const router = useRouter();
   const [showMoreMenu, setShowMoreMenu] = useState(false);
 
-  // Hide nav on login and setup pages
-  if (pathname === "/login" || pathname === "/setup" || pathname.startsWith("/i/")) return null;
+  // Hide nav on login, setup, public invoice, and customer self-onboarding pages
+  if (pathname === "/login" || pathname === "/setup" || pathname === "/onboard" || pathname.startsWith("/i/")) return null;
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -83,13 +83,14 @@ export default function Navbar() {
   return (
     <>
       {/* Desktop Top Navbar (Hidden on Mobile, Hidden on Print) */}
-      <nav className="hidden md:flex bg-white border-b border-slate-200 px-6 py-3.5 items-center justify-between sticky top-0 z-50 shadow-xs print:hidden">
+      <nav className="hidden md:flex bg-white border-b border-slate-200 px-6 py-2.5 items-center justify-between sticky top-0 z-50 shadow-xs print:hidden">
         <div className="flex items-center gap-6">
-          <Link href="/dashboard" className="text-lg font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-            <span className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-black text-base shadow-sm">
-              AJ
-            </span>
-            <span>AJ Truck Repair</span>
+          <Link href="/dashboard" className="flex items-center py-0.5 group shrink-0">
+            <img 
+              src="/logo.jpg" 
+              alt="AJ Road Service & Repair" 
+              className="h-12 w-auto max-w-[160px] object-contain rounded-lg group-hover:opacity-90 transition-opacity"
+            />
           </Link>
           
           <div className="flex items-center gap-1 ml-4">

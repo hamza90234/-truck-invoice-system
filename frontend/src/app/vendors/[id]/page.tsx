@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { API_URL } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
+import SearchablePartSelect from "@/app/components/SearchablePartSelect";
 
 interface PurchaseItemLine {
   id: string;
@@ -514,19 +515,13 @@ export default function VendorDetailPage({ params }: { params: Promise<{ id: str
                   <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
                     {purchaseItems.map((item) => (
                       <div key={item.id} className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
-                        <select
-                          value={item.partId}
-                          onChange={(e) => handleUpdatePartRow(item.id, "partId", e.target.value)}
-                          required
-                          className="flex-1 px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
-                        >
-                          <option value="">Select Part...</option>
-                          {partsCatalog.map((p) => (
-                            <option key={p.id} value={p.id}>
-                              [{p.partNumber}] {p.name} (Current Stock: {p.stockQuantity})
-                            </option>
-                          ))}
-                        </select>
+                        <div className="flex-1">
+                          <SearchablePartSelect
+                            parts={partsCatalog}
+                            value={item.partId}
+                            onChange={(partId) => handleUpdatePartRow(item.id, "partId", partId)}
+                          />
+                        </div>
 
                         <div className="w-16">
                           <input

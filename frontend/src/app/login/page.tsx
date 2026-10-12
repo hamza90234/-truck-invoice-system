@@ -43,10 +43,16 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
       <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-xl shadow-slate-200/50 overflow-hidden">
         <div className="p-8">
-          <div className="flex justify-center mb-8">
-            <div className="h-16 w-16 bg-blue-600 rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(37,99,235,0.5)]">
-              <LogIn className="text-white h-8 w-8 ml-1" />
-            </div>
+          <div className="flex justify-center mb-6">
+            <img 
+              src="/logo.jpg" 
+              alt="AJ Road Service & Repair" 
+              className="h-20 w-auto max-w-[220px] object-contain rounded-2xl shadow-sm"
+              onError={(e) => {
+                const target = e.target as HTMLElement;
+                target.style.display = 'none';
+              }}
+            />
           </div>
           
           <h2 className="text-2xl font-bold text-center text-slate-900 mb-2 tracking-tight">Welcome Back</h2>

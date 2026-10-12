@@ -15,6 +15,31 @@ export const getShopProfile = async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 };
+export const getPublicShopInfo = async (req, res) => {
+    try {
+        const shop = await prisma.shopProfile.findFirst({
+            select: {
+                shopName: true,
+                address: true,
+                phone: true,
+                email: true,
+                website: true,
+                logoUrl: true
+            }
+        });
+        res.status(200).json(shop || {
+            shopName: 'AJ Road Service & Repair',
+            address: '',
+            phone: '',
+            email: '',
+            website: '',
+            logoUrl: null
+        });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
 export const updateShopProfile = async (req, res) => {
     try {
         const { shopName, address, phone, email, website, logoUrl, taxId, defaultTaxRate, defaultPaymentTerms, creditCardFeePct, invoiceSettings, password } = req.body;

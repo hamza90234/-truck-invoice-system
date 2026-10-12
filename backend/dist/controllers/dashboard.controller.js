@@ -1,15 +1,17 @@
 import { prisma } from '../utils/prisma.js';
 export const getDashboardStats = async (req, res) => {
     try {
-        const [customerCount, vehicleCount, partCount, invoiceAgg, unpaidCount, recentInvoices, recentCustomers, expenseAgg, vendorAgg] = await Promise.all([
-            prisma.customer.count(),
+        const [customerCount, pendingCustomerCount, vehicleCount, partCount, revenueAgg, balanceAgg, unpaidCount, recentInvoices, recentCustomers, expenseAgg, vendorAgg, vendorPurchaseAgg] = await Promise.all([
+            prisma.customer.count({ where: { status: 'APPROVED' } }),
+            prisma.customer.count({ where: { status: 'PENDING' } }),
             prisma.vehicle.count(),
             prisma.part.count(),
             prisma.invoice.aggregate({
-                _sum: {
-                    amountPaid: true,
-                    balance: true
-                }
+                _sum: { amountPaid: true }
+            }),
+            prisma.invoice.aggregate({
+                _sum: { balance: true },
+                where: { balance: { gt: 0 } }
             }),
             prisma.invoice.count({
                 where: {
@@ -25,6 +27,7 @@ export const getDashboardStats = async (req, res) => {
                 }
             }),
             prisma.customer.findMany({
+                where: { status: 'APPROVED' },
                 take: 5,
                 orderBy: { createdAt: 'desc' },
                 include: {
@@ -37,15 +40,20 @@ export const getDashboardStats = async (req, res) => {
             }),
             prisma.vendor.aggregate({
                 _sum: { balance: true }
+            }),
+            prisma.vendorPurchase.aggregate({
+                _sum: { totalAmount: true }
             })
         ]);
-        const totalRevenue = Number(invoiceAgg._sum.amountPaid || 0);
-        const outstandingBalance = Number(invoiceAgg._sum.balance || 0);
+        const totalRevenue = Number(revenueAgg._sum.amountPaid || 0);
+        const outstandingBalance = Number(balanceAgg._sum.balance || 0);
         const totalExpenses = Number(expenseAgg._sum.amount || 0);
         const vendorPayables = Number(vendorAgg._sum.balance || 0);
-        const netProfit = totalRevenue - totalExpenses;
+        const totalCOGS = Number(vendorPurchaseAgg._sum.totalAmount || 0);
+        const netProfit = totalRevenue - totalCOGS - totalExpenses;
         res.status(200).json({
             activeCustomers: customerCount,
+            pendingCustomers: pendingCustomerCount,
             vehicles: vehicleCount,
             totalParts: partCount,
             totalRevenue,

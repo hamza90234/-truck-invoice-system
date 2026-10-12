@@ -39,7 +39,9 @@ app.use('/api', (req, res, next) => {
         return next();
     const isLogin = req.method === 'POST' && req.path === '/auth/login';
     const isPublicInvoice = req.method === 'GET' && req.path.startsWith('/invoices/public/');
-    if (isLogin || isPublicInvoice) {
+    const isOnboarding = req.method === 'POST' && req.path === '/customers/onboard';
+    const isPublicShop = req.method === 'GET' && req.path === '/shop/public';
+    if (isLogin || isPublicInvoice || isOnboarding || isPublicShop) {
         return next();
     }
     return requireAuth(req, res, next);
@@ -59,7 +61,7 @@ app.use('/api/banking', bankingRoutes);
 app.use('/api/reports', reportRoutes);
 // Health Check
 app.get('/', (req, res) => {
-    res.send('Hussain Invoice System API is running...');
+    res.send('AJ Truck Repair System API is running...');
 });
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

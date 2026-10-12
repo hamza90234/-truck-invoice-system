@@ -34,13 +34,23 @@ export default function InvoicePrintSheet({ invoice, publicUrl, hideQrCode = fal
       {/* HEADER */}
       <div className="flex flex-col sm:flex-row justify-between items-start gap-6 border-b border-slate-200 pb-6 mb-6 sm:pb-8 sm:mb-8">
         <div>
-          {shop.logoUrl ? (
-            <img src={shop.logoUrl} alt="Logo" className="h-16 object-contain mb-4" />
-          ) : (
-            <h1 className="text-2xl font-bold text-slate-900 mb-2">
-              {shop.shopName || "YOUR SHOP NAME"}
+          {/* Shop Logo */}
+          <div className="mb-3">
+            <img 
+              src={shop.logoUrl || "/logo.jpg"} 
+              alt={shop.shopName || "AJ Road Service & Repair"} 
+              className="h-16 sm:h-20 w-auto max-w-[260px] object-contain mb-2 print:max-h-20"
+              onError={(e) => {
+                const target = e.target as HTMLElement;
+                target.style.display = 'none';
+                const fallback = target.nextElementSibling as HTMLElement;
+                if (fallback) fallback.style.display = 'block';
+              }}
+            />
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight hidden">
+              {shop.shopName || "AJ Road Service & Repair"}
             </h1>
-          )}
+          </div>
           <div className="text-sm text-slate-500 space-y-1">
             {shop.address && <p>{shop.address}</p>}
             {shop.phone && <p>{shop.phone}</p>}

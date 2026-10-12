@@ -15,10 +15,14 @@ import {
   Building2, 
   AlertTriangle,
   CheckCircle,
-  HelpCircle
+  HelpCircle,
+  X
 } from "lucide-react";
 import { API_URL } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
+import SearchableCustomerSelect from "@/app/components/SearchableCustomerSelect";
+import SearchablePartSelect from "@/app/components/SearchablePartSelect";
+import AiVinScanner from "@/app/components/AiVinScanner";
 
 interface CustomerOption {
   id: string;
@@ -101,6 +105,19 @@ function InvoiceCreateForm() {
   const [savingPart, setSavingPart] = useState(false);
   const [partError, setPartError] = useState("");
 
+  // Quick Customer Add Modal
+  const [showCustomerModal, setShowCustomerModal] = useState(false);
+  const [newCustomerData, setNewCustomerData] = useState({
+    companyName: "",
+    contactPerson: "",
+    phone: "",
+    email: "",
+    unitNumber: "",
+    vin: ""
+  });
+  const [savingCustomer, setSavingCustomer] = useState(false);
+  const [customerModalError, setCustomerModalError] = useState("");
+
   // Line items
   const [laborItems, setLaborItems] = useState<LaborLine[]>([
     { id: "labor-1", description: "Standard Diagnostic & Inspection", quantity: "1", rate: "120" }
@@ -112,7 +129,7 @@ function InvoiceCreateForm() {
       try {
         setLoadingData(true);
         const [custRes, partsRes, nextNumRes, shopRes] = await Promise.all([
-          apiFetch(`${API_URL}/api/customers`),
+          apiFetch(`${API_URL}/api/customers?status=APPROVED`),
           apiFetch(`${API_URL}/api/parts`),
           apiFetch(`${API_URL}/api/invoices/next-number`),
           apiFetch(`${API_URL}/api/shop/profile`).catch(() => null)
@@ -216,6 +233,79 @@ function InvoiceCreateForm() {
       setPartError(err.message);
     } finally {
       setSavingPart(false);
+    }
+  };
+
+  const handleQuickAddCustomer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCustomerModalError("");
+    setSavingCustomer(true);
+    try {
+      if (!newCustomerData.companyName.trim()) {
+        throw new Error("Company Name is required");
+      }
+
+      const custRes = await apiFetch(`${API_URL}/api/customers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          companyName: newCustomerData.companyName.trim(),
+          contactPerson: newCustomerData.contactPerson.trim() || null,
+          phone: newCustomerData.phone.trim() || null,
+          email: newCustomerData.email.trim() || null,
+        }),
+      });
+
+      if (!custRes.ok) {
+        const d = await custRes.json();
+        throw new Error(d.error || "Failed to create customer");
+      }
+
+      const createdCust = await custRes.json();
+
+      let createdVeh: VehicleOption | null = null;
+      if (newCustomerData.unitNumber.trim() || newCustomerData.vin.trim()) {
+        try {
+          const vehRes = await apiFetch(`${API_URL}/api/vehicles`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              customerId: createdCust.id,
+              unitNumber: newCustomerData.unitNumber.trim() || null,
+              vin: newCustomerData.vin.trim() || `UNIT-${Date.now()}`,
+            }),
+          });
+          if (vehRes.ok) {
+            createdVeh = await vehRes.json();
+          }
+        } catch (vErr) {
+          console.warn("Vehicle creation notice:", vErr);
+        }
+      }
+
+      const fullCustomer: CustomerOption = {
+        id: createdCust.id,
+        companyName: createdCust.companyName,
+        contactPerson: createdCust.contactPerson,
+        phone: createdCust.phone,
+        vehicles: createdVeh ? [createdVeh] : [],
+      };
+
+      setCustomers((prev) => [fullCustomer, ...prev]);
+      handleCustomerChange(fullCustomer.id);
+      setShowCustomerModal(false);
+      setNewCustomerData({
+        companyName: "",
+        contactPerson: "",
+        phone: "",
+        email: "",
+        unitNumber: "",
+        vin: "",
+      });
+    } catch (err: any) {
+      setCustomerModalError(err.message);
+    } finally {
+      setSavingCustomer(false);
     }
   };
 
@@ -397,35 +487,37 @@ function InvoiceCreateForm() {
   return (
     <div className="max-w-5xl mx-auto pb-24 md:pb-12 bg-slate-50 min-h-screen">
       {/* Top Header */}
-      <div className="sticky top-0 z-20 bg-white border-b border-slate-200 px-4 py-3.5 flex items-center justify-between shadow-xs">
-        <div className="flex items-center gap-3">
-          <Link href="/invoices" className="text-slate-500 hover:text-slate-900 p-1 -ml-1">
+      <div className="sticky top-0 z-20 bg-white border-b border-slate-200 px-3.5 sm:px-4 py-3 flex items-center justify-between gap-2 shadow-xs">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <Link href="/invoices" className="text-slate-500 hover:text-slate-900 p-1 -ml-1 shrink-0">
             <ArrowLeft className="h-5 w-5" />
           </Link>
-          <div>
-            <h1 className="text-base md:text-lg font-bold text-slate-900 leading-tight">Create Repair Invoice</h1>
-            <p className="text-xs text-slate-500 hidden sm:block">Record repair work, parts used, and calculate billings</p>
+          <div className="min-w-0">
+            <h1 className="text-sm sm:text-lg font-bold text-slate-900 truncate">
+              Create Invoice
+            </h1>
+            <p className="text-[11px] text-slate-500 hidden sm:block">Record repair work, parts used, and calculate billings</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <button
             type="button"
             onClick={() => setStatus("DRAFT")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-              status === "DRAFT" ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
+            className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold border transition-all whitespace-nowrap cursor-pointer ${
+              status === "DRAFT" ? "bg-slate-900 text-white border-slate-900 shadow-xs" : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
             }`}
           >
-            Save as Draft
+            Draft
           </button>
           <button
             type="button"
             onClick={handleSubmit}
             disabled={saving}
-            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-1.5 rounded-lg text-xs transition-colors shadow-sm disabled:opacity-50"
+            className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold px-3 sm:px-4 py-1.5 rounded-xl text-[11px] sm:text-xs transition-colors shadow-xs disabled:opacity-50 whitespace-nowrap cursor-pointer"
           >
-            <Save className="h-3.5 w-3.5" />
-            {saving ? "Creating..." : "Issue Invoice"}
+            <Save className="h-3.5 w-3.5 shrink-0" />
+            <span>{saving ? "Saving..." : "Issue"}</span>
           </button>
         </div>
       </div>
@@ -451,19 +543,13 @@ function InvoiceCreateForm() {
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Customer / Account <span className="text-red-500">*</span>
               </label>
-              <select
+              <SearchableCustomerSelect
+                customers={customers}
                 value={selectedCustomerId}
-                onChange={(e) => handleCustomerChange(e.target.value)}
+                onChange={handleCustomerChange}
+                onAddNewCustomer={() => setShowCustomerModal(true)}
                 required
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              >
-                <option value="">Select Customer...</option>
-                {customers.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.companyName} {c.contactPerson ? `(${c.contactPerson})` : ""}
-                  </option>
-                ))}
-              </select>
+              />
               {customers.length === 0 && !loadingData && (
                 <p className="text-[11px] text-amber-600 mt-1">
                   No customers found. <Link href="/customers/new" className="underline font-semibold">Add a customer first</Link>
@@ -474,14 +560,14 @@ function InvoiceCreateForm() {
             {/* Vehicle Select */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Customer's Vehicle / Truck Unit <span className="text-red-500">*</span>
+                Customer&apos;s Vehicle / Truck Unit <span className="text-red-500">*</span>
               </label>
               <select
                 value={selectedVehicleId}
                 onChange={(e) => setSelectedVehicleId(e.target.value)}
                 disabled={!selectedCustomerId || availableVehicles.length === 0}
                 required
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400"
+                className="w-full min-h-[48px] sm:min-h-[44px] px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400 font-semibold transition"
               >
                 <option value="">
                   {!selectedCustomerId 
@@ -617,18 +703,18 @@ function InvoiceCreateForm() {
             {laborItems.map((item, idx) => {
               const lineTotal = (parseFloat(item.quantity) || 0) * (parseFloat(item.rate) || 0);
               return (
-                <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 bg-slate-50/70 p-2.5 rounded-xl border border-slate-200/60">
+                <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 bg-slate-50/70 p-3 sm:p-2.5 rounded-2xl sm:rounded-xl border border-slate-200/80 shadow-2xs">
                   <div className="flex-1 w-full">
                     <input
                       type="text"
                       placeholder="e.g. Brake Pad Replacement & Rotor Resurfacing"
                       value={item.description}
                       onChange={(e) => updateLaborRow(item.id, "description", e.target.value)}
-                      className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                   </div>
 
-                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <div className="flex items-center justify-between sm:justify-start gap-2.5 w-full sm:w-auto pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-200/60 sm:border-transparent">
                     <div className="w-20">
                       <div className="relative">
                         <input
@@ -638,15 +724,15 @@ function InvoiceCreateForm() {
                           placeholder="Hours"
                           value={item.quantity}
                           onChange={(e) => updateLaborRow(item.id, "quantity", e.target.value)}
-                          className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-right focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="w-full px-2.5 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-center font-bold focus:outline-none focus:ring-1 focus:ring-blue-500"
                         />
                       </div>
-                      <span className="text-[10px] text-slate-400 block text-right pr-1">Hours</span>
+                      <span className="text-[10px] text-slate-400 block text-center mt-0.5">Hours</span>
                     </div>
 
                     <div className="w-24">
                       <div className="relative">
-                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-xs">$</span>
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">$</span>
                         <input
                           type="number"
                           step="1"
@@ -654,20 +740,24 @@ function InvoiceCreateForm() {
                           placeholder="Rate"
                           value={item.rate}
                           onChange={(e) => updateLaborRow(item.id, "rate", e.target.value)}
-                          className="w-full pl-5 pr-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-right focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="w-full pl-6 pr-2 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-right font-bold focus:outline-none focus:ring-1 focus:ring-blue-500"
                         />
                       </div>
-                      <span className="text-[10px] text-slate-400 block text-right pr-1">Rate/hr</span>
+                      <span className="text-[10px] text-slate-400 block text-right pr-1 mt-0.5">Rate/hr</span>
                     </div>
 
-                    <div className="w-24 text-right font-bold text-slate-900 text-xs px-2">
-                      ${lineTotal.toFixed(2)}
+                    <div className="flex-1 sm:w-20 text-right pr-1">
+                      <div className="font-bold text-slate-900 text-xs sm:text-sm">
+                        ${lineTotal.toFixed(2)}
+                      </div>
+                      <span className="text-[10px] text-slate-400 block">Total</span>
                     </div>
 
                     <button
                       type="button"
                       onClick={() => removeLaborRow(item.id)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 rounded-md transition-colors"
+                      className="p-2 text-slate-400 hover:text-rose-600 active:bg-rose-50 rounded-xl transition-colors cursor-pointer"
+                      title="Remove labor"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -712,36 +802,21 @@ function InvoiceCreateForm() {
                 const isOverStock = item.stockQuantity !== undefined && (parseFloat(item.quantity) || 0) > item.stockQuantity;
 
                 return (
-                  <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 bg-slate-50/70 p-2.5 rounded-xl border border-slate-200/60">
-                    <div className="flex-1 w-full space-y-1.5">
-                      <select
+                  <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 bg-slate-50/70 p-3 sm:p-2.5 rounded-2xl sm:rounded-xl border border-slate-200/80 shadow-2xs">
+                    <div className="flex-1 w-full space-y-2">
+                      <SearchablePartSelect
+                        parts={partsCatalog}
                         value={item.partId}
-                        onChange={(e) => {
-                          if (e.target.value === "CREATE_NEW") {
-                            setShowPartModal(true);
-                          } else {
-                            selectPartFromCatalog(item.id, e.target.value);
-                          }
-                        }}
-                        className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold"
-                      >
-                        <option value="">Custom Non-Inventory Part</option>
-                        <option value="CREATE_NEW" className="font-bold text-blue-600">+ Add New Part to Inventory</option>
-                        <optgroup label="Catalog Parts">
-                          {partsCatalog.map((p) => (
-                            <option key={p.id} value={p.id}>
-                              [{p.partNumber}] {p.name} — ${Number(p.sellingPrice).toFixed(2)} (Stock: {p.stockQuantity})
-                            </option>
-                          ))}
-                        </optgroup>
-                      </select>
+                        onChange={(partId) => selectPartFromCatalog(item.id, partId)}
+                        onAddNewPart={() => setShowPartModal(true)}
+                      />
 
                       <input
                         type="text"
                         placeholder="Part Description"
                         value={item.description}
                         onChange={(e) => updatePartRow(item.id, "description", e.target.value)}
-                        className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                       />
 
                       {isOverStock && (
@@ -751,7 +826,7 @@ function InvoiceCreateForm() {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <div className="flex items-center justify-between sm:justify-start gap-2.5 w-full sm:w-auto pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-200/60 sm:border-transparent">
                       <div className="w-20">
                         <input
                           type="number"
@@ -760,14 +835,14 @@ function InvoiceCreateForm() {
                           placeholder="Qty"
                           value={item.quantity}
                           onChange={(e) => updatePartRow(item.id, "quantity", e.target.value)}
-                          className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-right focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="w-full px-2.5 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-center font-bold focus:outline-none focus:ring-1 focus:ring-blue-500"
                         />
-                        <span className="text-[10px] text-slate-400 block text-right pr-1">Qty</span>
+                        <span className="text-[10px] text-slate-400 block text-center mt-0.5">Qty</span>
                       </div>
 
                       <div className="w-24">
                         <div className="relative">
-                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-xs">$</span>
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">$</span>
                           <input
                             type="number"
                             step="0.01"
@@ -775,20 +850,24 @@ function InvoiceCreateForm() {
                             placeholder="Price"
                             value={item.rate}
                             onChange={(e) => updatePartRow(item.id, "rate", e.target.value)}
-                            className="w-full pl-5 pr-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-right focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="w-full pl-6 pr-2 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-right font-bold focus:outline-none focus:ring-1 focus:ring-blue-500"
                           />
                         </div>
-                        <span className="text-[10px] text-slate-400 block text-right pr-1">Unit Price</span>
+                        <span className="text-[10px] text-slate-400 block text-right pr-1 mt-0.5">Unit Price</span>
                       </div>
 
-                      <div className="w-24 text-right font-bold text-slate-900 text-xs px-2">
-                        ${lineTotal.toFixed(2)}
+                      <div className="flex-1 sm:w-20 text-right pr-1">
+                        <div className="font-bold text-slate-900 text-xs sm:text-sm">
+                          ${lineTotal.toFixed(2)}
+                        </div>
+                        <span className="text-[10px] text-slate-400 block">Total</span>
                       </div>
 
                       <button
                         type="button"
                         onClick={() => removePartRow(item.id)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 rounded-md transition-colors"
+                        className="p-2 text-slate-400 hover:text-rose-600 active:bg-rose-50 rounded-xl transition-colors cursor-pointer"
+                        title="Remove part"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -907,43 +986,283 @@ function InvoiceCreateForm() {
         </div>
       </form>
 
-      {/* Quick Add Part Modal */}
-      {showPartModal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4">
-            <h3 className="text-lg font-bold text-slate-900">Add Part to Inventory</h3>
-            {partError && (
-              <div className="p-3 bg-red-50 text-red-600 text-xs rounded-lg">{partError}</div>
-            )}
-            <form onSubmit={handleQuickAddPart} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Part Number *</label>
-                  <input required type="text" value={newPart.partNumber} onChange={e => setNewPart({...newPart, partNumber: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-xs" />
+      {/* Quick Add Customer Modal (Mobile-First) */}
+      {showCustomerModal && (
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 animate-in fade-in duration-150">
+          <div className="fixed inset-0" onClick={() => setShowCustomerModal(false)} />
+          <div className="relative w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl border-t sm:border border-slate-200 overflow-hidden flex flex-col max-h-[90dvh] sm:max-h-[85vh] z-10 animate-in slide-in-from-bottom-6 duration-200">
+            {/* Drag Handle on Mobile */}
+            <div className="pt-2.5 pb-1 sm:hidden flex justify-center bg-slate-50/80 shrink-0">
+              <div className="w-12 h-1.5 bg-slate-300 rounded-full" />
+            </div>
+
+            {/* Header */}
+            <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80 shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="h-7 w-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
+                  <Building2 className="h-4 w-4" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Part Name *</label>
-                  <input required type="text" value={newPart.name} onChange={e => setNewPart({...newPart, name: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-xs" />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Selling Price *</label>
-                  <input required type="number" step="0.01" value={newPart.sellingPrice} onChange={e => setNewPart({...newPart, sellingPrice: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-xs" />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Purchase Cost</label>
-                  <input type="number" step="0.01" value={newPart.purchaseCost} onChange={e => setNewPart({...newPart, purchaseCost: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-xs" />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Current Stock</label>
-                  <input type="number" value={newPart.stockQuantity} onChange={e => setNewPart({...newPart, stockQuantity: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-xs" />
+                  <h3 className="font-bold text-slate-900 text-sm sm:text-base leading-tight">Quick Add Customer</h3>
+                  <p className="text-[11px] text-slate-500">Add account and start invoicing immediately</p>
                 </div>
               </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setShowPartModal(false)} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg">Cancel</button>
-                <button type="submit" disabled={savingPart} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg disabled:opacity-50">
-                  {savingPart ? "Saving..." : "Save & Add to Invoice"}
+              <button
+                type="button"
+                onClick={() => setShowCustomerModal(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Scrollable Form Body */}
+            <form onSubmit={handleQuickAddCustomer} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+              {customerModalError && (
+                <div className="p-3 bg-red-50 text-red-600 text-xs rounded-xl flex items-center gap-2 font-medium">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  <span>{customerModalError}</span>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Company / Business Name *</label>
+                <input
+                  required
+                  type="text"
+                  placeholder="e.g. Eagle Freight Logistics LLC"
+                  value={newCustomerData.companyName}
+                  onChange={(e) => setNewCustomerData({ ...newCustomerData, companyName: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-300 focus:border-blue-500 rounded-xl text-base sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-semibold"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Contact Person</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. John Miller"
+                    value={newCustomerData.contactPerson}
+                    onChange={(e) => setNewCustomerData({ ...newCustomerData, contactPerson: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-300 focus:border-blue-500 rounded-xl text-base sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Phone Number</label>
+                  <input
+                    type="tel"
+                    placeholder="e.g. (909) 555-0199"
+                    value={newCustomerData.phone}
+                    onChange={(e) => setNewCustomerData({ ...newCustomerData, phone: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-300 focus:border-blue-500 rounded-xl text-base sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Email Address (Optional)</label>
+                <input
+                  type="email"
+                  placeholder="billing@company.com"
+                  value={newCustomerData.email}
+                  onChange={(e) => setNewCustomerData({ ...newCustomerData, email: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-300 focus:border-blue-500 rounded-xl text-base sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
+
+              {/* Initial Vehicle (Optional) */}
+              <div className="pt-2 border-t border-slate-100">
+                <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <Truck className="h-4 w-4 text-blue-600" />
+                    Initial Vehicle / Truck Unit (Optional)
+                  </span>
+                  <AiVinScanner
+                    compact
+                    buttonLabel="📷 Scan VIN with AI"
+                    onScanComplete={(data) => {
+                      setNewCustomerData((prev) => ({
+                        ...prev,
+                        vin: data.vin || prev.vin,
+                        unitNumber: data.unitNumber || prev.unitNumber,
+                      }));
+                    }}
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">Unit Number</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 104"
+                      value={newCustomerData.unitNumber}
+                      onChange={(e) => setNewCustomerData({ ...newCustomerData, unitNumber: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-300 focus:border-blue-500 rounded-xl text-base sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">VIN (Last 6 or full)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 1XKAD49X..."
+                      value={newCustomerData.vin}
+                      onChange={(e) => setNewCustomerData({ ...newCustomerData, vin: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-300 focus:border-blue-500 rounded-xl text-base sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-mono uppercase"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-3 flex flex-col sm:flex-row justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCustomerModal(false)}
+                  className="w-full sm:w-auto min-h-[46px] px-5 py-2.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 text-xs sm:text-sm font-bold rounded-xl transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingCustomer}
+                  className="w-full sm:w-auto min-h-[46px] px-6 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs sm:text-sm font-bold rounded-xl transition shadow-sm disabled:opacity-50 cursor-pointer"
+                >
+                  {savingCustomer ? "Creating Customer..." : "Save & Select Customer"}
                 </button>
               </div>
+              <div className="h-6 sm:h-2" />
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Add Part Modal (Mobile-First) */}
+      {showPartModal && (
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 animate-in fade-in duration-150">
+          <div className="fixed inset-0" onClick={() => setShowPartModal(false)} />
+          <div className="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl border-t sm:border border-slate-200 overflow-hidden flex flex-col max-h-[90dvh] sm:max-h-[85vh] z-10 animate-in slide-in-from-bottom-6 duration-200">
+            {/* Drag Handle on Mobile */}
+            <div className="pt-2.5 pb-1 sm:hidden flex justify-center bg-slate-50/80 shrink-0">
+              <div className="w-12 h-1.5 bg-slate-300 rounded-full" />
+            </div>
+
+            {/* Header */}
+            <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80 shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="h-7 w-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
+                  <Package className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm sm:text-base leading-tight">Add Part to Inventory</h3>
+                  <p className="text-[11px] text-slate-500">Save to catalog and auto-add to this invoice</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPartModal(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Scrollable Form Body */}
+            <form onSubmit={handleQuickAddPart} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+              {partError && (
+                <div className="p-3 bg-red-50 text-red-600 text-xs rounded-xl flex items-center gap-2 font-medium">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  <span>{partError}</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Part Number *</label>
+                  <input
+                    required
+                    type="text"
+                    placeholder="e.g. BF-1280"
+                    value={newPart.partNumber}
+                    onChange={(e) => setNewPart({ ...newPart, partNumber: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-300 focus:border-blue-500 rounded-xl text-base sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-mono font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Part Name *</label>
+                  <input
+                    required
+                    type="text"
+                    placeholder="e.g. Fuel Water Separator"
+                    value={newPart.name}
+                    onChange={(e) => setNewPart({ ...newPart, name: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-300 focus:border-blue-500 rounded-xl text-base sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-semibold"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Selling Price *</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">$</span>
+                    <input
+                      required
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      value={newPart.sellingPrice}
+                      onChange={(e) => setNewPart({ ...newPart, sellingPrice: e.target.value })}
+                      className="w-full pl-7 pr-3 py-2.5 bg-slate-50 focus:bg-white border border-slate-300 focus:border-blue-500 rounded-xl text-base sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-bold"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Purchase Cost</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">$</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      value={newPart.purchaseCost}
+                      onChange={(e) => setNewPart({ ...newPart, purchaseCost: e.target.value })}
+                      className="w-full pl-7 pr-3 py-2.5 bg-slate-50 focus:bg-white border border-slate-300 focus:border-blue-500 rounded-xl text-base sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-bold"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Stock Qty</label>
+                  <input
+                    type="number"
+                    step="1"
+                    value={newPart.stockQuantity}
+                    onChange={(e) => setNewPart({ ...newPart, stockQuantity: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-300 focus:border-blue-500 rounded-xl text-base sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-bold text-center"
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-3 flex flex-col sm:flex-row justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowPartModal(false)}
+                  className="w-full sm:w-auto min-h-[46px] px-5 py-2.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 text-xs sm:text-sm font-bold rounded-xl transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingPart}
+                  className="w-full sm:w-auto min-h-[46px] px-6 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs sm:text-sm font-bold rounded-xl transition shadow-sm disabled:opacity-50 cursor-pointer"
+                >
+                  {savingPart ? "Saving Part..." : "Save & Add to Invoice"}
+                </button>
+              </div>
+              <div className="h-6 sm:h-2" />
             </form>
           </div>
         </div>

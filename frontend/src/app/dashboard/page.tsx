@@ -25,6 +25,7 @@ import { apiFetch } from "@/lib/api";
 
 interface DashboardStats {
   activeCustomers: number;
+  pendingCustomers?: number;
   vehicles: number;
   totalParts: number;
   totalRevenue: number;
@@ -40,6 +41,7 @@ interface DashboardStats {
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats>({
     activeCustomers: 0,
+    pendingCustomers: 0,
     vehicles: 0,
     totalParts: 0,
     totalRevenue: 0,
@@ -130,6 +132,32 @@ export default function DashboardPage() {
         <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-center gap-2">
           <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
           <span>{error}</span>
+        </div>
+      )}
+
+      {/* Pending Onboarding Alert */}
+      {Number(stats.pendingCustomers) > 0 && (
+        <div className="p-4 sm:p-5 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-300 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs animate-in fade-in">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+              <Clock className="h-5 w-5" />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-slate-900">
+                {stats.pendingCustomers} Customer Onboarding Application{Number(stats.pendingCustomers) > 1 ? "s" : ""} Pending Review
+              </h4>
+              <p className="text-xs text-slate-500">
+                New clients submitted their company and truck information online.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/customers"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-sm transition whitespace-nowrap self-start sm:self-auto"
+          >
+            <span>Review Applications</span>
+            <ChevronRight className="h-4 w-4" />
+          </Link>
         </div>
       )}
 

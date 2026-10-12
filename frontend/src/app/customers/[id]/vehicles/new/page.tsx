@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, Truck, Save } from "lucide-react";
 import { API_URL } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
+import AiVinScanner from "@/app/components/AiVinScanner";
 
 export default function AddVehiclePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -145,7 +146,24 @@ export default function AddVehiclePage({ params }: { params: Promise<{ id: strin
             <h3 className="text-sm font-semibold text-slate-900 mb-4 pb-2 border-b border-slate-100">Primary Details</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">VIN (Required) *</label>
+                <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
+                  <label className="block text-sm font-medium text-slate-700">VIN (Required) *</label>
+                  <AiVinScanner
+                    compact
+                    buttonLabel="📷 Scan VIN with AI"
+                    onScanComplete={(data) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        vin: data.vin || prev.vin,
+                        unitNumber: data.unitNumber || prev.unitNumber,
+                        year: data.year ? String(data.year) : prev.year,
+                        make: data.make || prev.make,
+                        model: data.model || prev.model,
+                        licensePlate: data.licensePlate || prev.licensePlate,
+                      }));
+                    }}
+                  />
+                </div>
                 <div className="flex gap-2">
                   <input
                     type="text"

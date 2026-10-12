@@ -8,4 +8,5 @@ export declare const updateInvoice: (req: Request, res: Response) => Promise<voi
 export declare const deleteInvoice: (req: Request, res: Response) => Promise<void>;
 export declare const recordPayment: (req: Request, res: Response) => Promise<void>;
 export declare const closeInvoice: (req: Request, res: Response) => Promise<void>;
+export declare const emailInvoice: (req: Request, res: Response) => Promise<void>;
 //# sourceMappingURL=invoice.controller.d.ts.map

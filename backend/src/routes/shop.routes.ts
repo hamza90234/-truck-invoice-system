@@ -1,8 +1,9 @@
 import express from 'express';
-import { getShopProfile, updateShopProfile } from '../controllers/shop.controller.js';
+import { getShopProfile, getPublicShopInfo, updateShopProfile } from '../controllers/shop.controller.js';
 
 const router = express.Router();
 
+router.get('/public', getPublicShopInfo);
 router.get('/profile', getShopProfile);
 router.put('/profile', updateShopProfile);
 

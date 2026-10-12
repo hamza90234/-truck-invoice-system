@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { API_URL } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
+import SearchablePartSelect from "@/app/components/SearchablePartSelect";
 
 interface PartOption {
   id: string;
@@ -334,26 +335,26 @@ export default function EditInvoicePage({ params }: { params: Promise<{ id: stri
   return (
     <div className="max-w-5xl mx-auto pb-24 md:pb-12 bg-slate-50 min-h-screen">
       {/* Top Header */}
-      <div className="sticky top-0 z-20 bg-white border-b border-slate-200 px-4 py-3.5 flex items-center justify-between shadow-xs">
-        <div className="flex items-center gap-3">
-          <Link href={`/invoices/${id}`} className="text-slate-500 hover:text-slate-900 p-1 -ml-1">
+      <div className="sticky top-0 z-20 bg-white border-b border-slate-200 px-3.5 sm:px-4 py-3 flex items-center justify-between gap-2 shadow-xs">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <Link href={`/invoices/${id}`} className="text-slate-500 hover:text-slate-900 p-1 -ml-1 shrink-0">
             <ArrowLeft className="h-5 w-5" />
           </Link>
-          <div>
-            <h1 className="text-base md:text-lg font-bold text-slate-900 leading-tight">Edit Invoice {invoice?.invoiceNumber}</h1>
-            <p className="text-xs text-slate-500">Update labor, parts, or billing terms</p>
+          <div className="min-w-0">
+            <h1 className="text-sm sm:text-lg font-bold text-slate-900 truncate">Edit Invoice {invoice?.invoiceNumber}</h1>
+            <p className="text-[11px] text-slate-500 hidden sm:block">Update labor, parts, or billing terms</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={handleSubmit}
             disabled={saving}
-            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-1.5 rounded-lg text-xs transition-colors shadow-sm disabled:opacity-50"
+            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold px-3 sm:px-4 py-1.5 rounded-xl text-[11px] sm:text-xs transition-colors shadow-xs disabled:opacity-50 whitespace-nowrap cursor-pointer"
           >
-            <Save className="h-3.5 w-3.5" />
-            {saving ? "Saving Changes..." : "Save Changes"}
+            <Save className="h-3.5 w-3.5 shrink-0" />
+            <span>{saving ? "Saving..." : "Save Changes"}</span>
           </button>
         </div>
       </div>
@@ -499,18 +500,18 @@ export default function EditInvoicePage({ params }: { params: Promise<{ id: stri
             {laborItems.map((item) => {
               const lineTotal = (parseFloat(item.quantity) || 0) * (parseFloat(item.rate) || 0);
               return (
-                <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 bg-slate-50/70 p-2.5 rounded-xl border border-slate-200/60">
+                <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 bg-slate-50/70 p-3 sm:p-2.5 rounded-2xl sm:rounded-xl border border-slate-200/80 shadow-2xs">
                   <div className="flex-1 w-full">
                     <input
                       type="text"
                       placeholder="Labor Description"
                       value={item.description}
                       onChange={(e) => updateLaborRow(item.id, "description", e.target.value)}
-                      className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                   </div>
 
-                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <div className="flex items-center justify-between sm:justify-start gap-2.5 w-full sm:w-auto pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-200/60 sm:border-transparent">
                     <div className="w-20">
                       <input
                         type="number"
@@ -519,14 +520,14 @@ export default function EditInvoicePage({ params }: { params: Promise<{ id: stri
                         placeholder="Hours"
                         value={item.quantity}
                         onChange={(e) => updateLaborRow(item.id, "quantity", e.target.value)}
-                        className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-right focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="w-full px-2.5 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-center font-bold focus:outline-none focus:ring-1 focus:ring-blue-500"
                       />
-                      <span className="text-[10px] text-slate-400 block text-right pr-1">Hours</span>
+                      <span className="text-[10px] text-slate-400 block text-center mt-0.5">Hours</span>
                     </div>
 
                     <div className="w-24">
                       <div className="relative">
-                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-xs">$</span>
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">$</span>
                         <input
                           type="number"
                           step="1"
@@ -534,20 +535,24 @@ export default function EditInvoicePage({ params }: { params: Promise<{ id: stri
                           placeholder="Rate"
                           value={item.rate}
                           onChange={(e) => updateLaborRow(item.id, "rate", e.target.value)}
-                          className="w-full pl-5 pr-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-right focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="w-full pl-6 pr-2 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-right font-bold focus:outline-none focus:ring-1 focus:ring-blue-500"
                         />
                       </div>
-                      <span className="text-[10px] text-slate-400 block text-right pr-1">Rate/hr</span>
+                      <span className="text-[10px] text-slate-400 block text-right pr-1 mt-0.5">Rate/hr</span>
                     </div>
 
-                    <div className="w-24 text-right font-bold text-slate-900 text-xs px-2">
-                      ${lineTotal.toFixed(2)}
+                    <div className="flex-1 sm:w-20 text-right pr-1">
+                      <div className="font-bold text-slate-900 text-xs sm:text-sm">
+                        ${lineTotal.toFixed(2)}
+                      </div>
+                      <span className="text-[10px] text-slate-400 block">Total</span>
                     </div>
 
                     <button
                       type="button"
                       onClick={() => removeLaborRow(item.id)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 rounded-md transition-colors"
+                      className="p-2 text-slate-400 hover:text-rose-600 active:bg-rose-50 rounded-xl transition-colors cursor-pointer"
+                      title="Remove labor"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -578,40 +583,25 @@ export default function EditInvoicePage({ params }: { params: Promise<{ id: stri
             {partItems.map((item) => {
               const lineTotal = (parseFloat(item.quantity) || 0) * (parseFloat(item.rate) || 0);
               return (
-                <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 bg-slate-50/70 p-2.5 rounded-xl border border-slate-200/60">
-                  <div className="flex-1 w-full space-y-1.5">
-                    <select
+                <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 bg-slate-50/70 p-3 sm:p-2.5 rounded-2xl sm:rounded-xl border border-slate-200/80 shadow-2xs">
+                  <div className="flex-1 w-full space-y-2">
+                    <SearchablePartSelect
+                      parts={partsCatalog}
                       value={item.partId}
-                      onChange={(e) => {
-                        if (e.target.value === "CREATE_NEW") {
-                          setShowPartModal(true);
-                        } else {
-                          selectPartFromCatalog(item.id, e.target.value);
-                        }
-                      }}
-                      className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold"
-                    >
-                      <option value="">Custom Non-Inventory Part</option>
-                      <option value="CREATE_NEW" className="font-bold text-blue-600">+ Add New Part to Inventory</option>
-                      <optgroup label="Catalog Parts">
-                        {partsCatalog.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            [{p.partNumber}] {p.name} — ${Number(p.sellingPrice).toFixed(2)} (Stock: {p.stockQuantity})
-                          </option>
-                        ))}
-                      </optgroup>
-                    </select>
+                      onChange={(partId) => selectPartFromCatalog(item.id, partId)}
+                      onAddNewPart={() => setShowPartModal(true)}
+                    />
 
                     <input
                       type="text"
                       placeholder="Part Description"
                       value={item.description}
                       onChange={(e) => updatePartRow(item.id, "description", e.target.value)}
-                      className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                   </div>
 
-                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <div className="flex items-center justify-between sm:justify-start gap-2.5 w-full sm:w-auto pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-200/60 sm:border-transparent">
                     <div className="w-20">
                       <input
                         type="number"
@@ -620,14 +610,14 @@ export default function EditInvoicePage({ params }: { params: Promise<{ id: stri
                         placeholder="Qty"
                         value={item.quantity}
                         onChange={(e) => updatePartRow(item.id, "quantity", e.target.value)}
-                        className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-right focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="w-full px-2.5 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-center font-bold focus:outline-none focus:ring-1 focus:ring-blue-500"
                       />
-                      <span className="text-[10px] text-slate-400 block text-right pr-1">Qty</span>
+                      <span className="text-[10px] text-slate-400 block text-center mt-0.5">Qty</span>
                     </div>
 
                     <div className="w-24">
                       <div className="relative">
-                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-xs">$</span>
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">$</span>
                         <input
                           type="number"
                           step="0.01"
@@ -635,20 +625,24 @@ export default function EditInvoicePage({ params }: { params: Promise<{ id: stri
                           placeholder="Price"
                           value={item.rate}
                           onChange={(e) => updatePartRow(item.id, "rate", e.target.value)}
-                          className="w-full pl-5 pr-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-right focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="w-full pl-6 pr-2 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-right font-bold focus:outline-none focus:ring-1 focus:ring-blue-500"
                         />
                       </div>
-                      <span className="text-[10px] text-slate-400 block text-right pr-1">Unit Price</span>
+                      <span className="text-[10px] text-slate-400 block text-right pr-1 mt-0.5">Unit Price</span>
                     </div>
 
-                    <div className="w-24 text-right font-bold text-slate-900 text-xs px-2">
-                      ${lineTotal.toFixed(2)}
+                    <div className="flex-1 sm:w-20 text-right pr-1">
+                      <div className="font-bold text-slate-900 text-xs sm:text-sm">
+                        ${lineTotal.toFixed(2)}
+                      </div>
+                      <span className="text-[10px] text-slate-400 block">Total</span>
                     </div>
 
                     <button
                       type="button"
                       onClick={() => removePartRow(item.id)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 rounded-md transition-colors"
+                      className="p-2 text-slate-400 hover:text-rose-600 active:bg-rose-50 rounded-xl transition-colors cursor-pointer"
+                      title="Remove part"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>

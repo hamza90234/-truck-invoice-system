@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getInvoices, getInvoiceById, getNextInvoiceNumber, createInvoice, updateInvoice, deleteInvoice, recordPayment, closeInvoice, getPublicInvoice } from '../controllers/invoice.controller.js';
+import { getInvoices, getInvoiceById, getNextInvoiceNumber, createInvoice, updateInvoice, deleteInvoice, recordPayment, closeInvoice, getPublicInvoice, emailInvoice } from '../controllers/invoice.controller.js';
 const router = Router();
 // Public customer invoice route
 router.get('/public/:id', getPublicInvoice);
@@ -13,5 +13,6 @@ router.put('/:id', updateInvoice);
 router.delete('/:id', deleteInvoice);
 router.post('/:id/payments', recordPayment);
 router.post('/:id/close', closeInvoice);
+router.post('/:id/email', emailInvoice);
 export default router;
 //# sourceMappingURL=invoice.routes.js.map

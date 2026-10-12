@@ -48,6 +48,8 @@ model Customer {
   customerType   String?   // e.g., "Fleet", "Owner-Operator"
   paymentTerms   String?
   notes          String?
+  status         String    @default("APPROVED") // e.g., "APPROVED", "PENDING", "REJECTED"
+  rejectionReason String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 

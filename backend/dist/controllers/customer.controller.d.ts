@@ -1,5 +1,9 @@
 import type { Request, Response } from 'express';
 export declare const getCustomers: (req: Request, res: Response) => Promise<void>;
+export declare const getPendingCustomerCount: (req: Request, res: Response) => Promise<void>;
+export declare const onboardCustomer: (req: Request, res: Response) => Promise<void>;
+export declare const approveCustomer: (req: Request, res: Response) => Promise<void>;
+export declare const rejectCustomer: (req: Request, res: Response) => Promise<void>;
 export declare const getCustomerById: (req: Request, res: Response) => Promise<void>;
 export declare const createCustomer: (req: Request, res: Response) => Promise<void>;
 export declare const updateCustomer: (req: Request, res: Response) => Promise<void>;

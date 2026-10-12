@@ -5,6 +5,7 @@ export const getDashboardStats = async (req: Request, res: Response): Promise<vo
   try {
     const [
       customerCount,
+      pendingCustomerCount,
       vehicleCount,
       partCount,
       revenueAgg,
@@ -16,7 +17,8 @@ export const getDashboardStats = async (req: Request, res: Response): Promise<vo
       vendorAgg,
       vendorPurchaseAgg
     ] = await Promise.all([
-      prisma.customer.count(),
+      prisma.customer.count({ where: { status: 'APPROVED' } as any }),
+      prisma.customer.count({ where: { status: 'PENDING' } as any }),
       prisma.vehicle.count(),
       prisma.part.count(),
       prisma.invoice.aggregate({
@@ -40,6 +42,7 @@ export const getDashboardStats = async (req: Request, res: Response): Promise<vo
         }
       }),
       prisma.customer.findMany({
+        where: { status: 'APPROVED' } as any,
         take: 5,
         orderBy: { createdAt: 'desc' },
         include: {
@@ -67,6 +70,7 @@ export const getDashboardStats = async (req: Request, res: Response): Promise<vo
 
     res.status(200).json({
       activeCustomers: customerCount,
+      pendingCustomers: pendingCustomerCount,
       vehicles: vehicleCount,
       totalParts: partCount,
       totalRevenue,

@@ -217,8 +217,30 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Logo URL</label>
-              <input type="url" name="logoUrl" value={formData.logoUrl} onChange={handleChange} placeholder="https://..." className="w-full bg-white border border-slate-300 text-slate-900 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm" />
+              <label className="block text-sm font-medium text-slate-700 mb-2">Shop Logo</label>
+              <div className="flex items-center gap-3">
+                <div className="h-11 w-11 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 p-1">
+                  <img 
+                    src={formData.logoUrl || "/logo.jpg"} 
+                    alt="Logo Preview" 
+                    className="h-full w-full object-contain"
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                </div>
+                <input 
+                  type="text" 
+                  name="logoUrl" 
+                  value={formData.logoUrl} 
+                  onChange={handleChange} 
+                  placeholder="/logo.jpg or https://..." 
+                  className="flex-1 bg-white border border-slate-300 text-slate-900 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm" 
+                />
+              </div>
+              <p className="text-xs text-slate-400 mt-1">
+                Using <span className="font-mono text-slate-600">/logo.jpg</span> from public folder by default.
+              </p>
             </div>
 
             <div>
