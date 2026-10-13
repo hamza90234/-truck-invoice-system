@@ -75,59 +75,65 @@ export default function CustomersPage() {
   );
 
   return (
-    <div className="max-w-5xl mx-auto md:p-8 relative min-h-[calc(100vh-64px)] pb-24 md:pb-8">
+    <div className="max-w-5xl mx-auto p-4 md:p-8 pb-24 md:pb-12 space-y-6">
       {/* Header */}
-      <div className="px-4 py-4 md:py-0 md:mb-6 bg-slate-50 sticky top-0 z-10 border-b border-slate-200 md:border-none md:bg-transparent">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">Customers</h1>
-            <p className="text-slate-500 mt-1 text-sm md:text-base">Manage client accounts, review self-onboarding applications, and view history.</p>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            {/* Copy Onboarding Link Button */}
-            <button
-              onClick={handleCopyOnboardLink}
-              type="button"
-              className={`flex items-center justify-center gap-2 font-medium px-4 py-2.5 rounded-xl border transition-all text-sm shadow-sm cursor-pointer ${
-                copiedLink 
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-300 ring-2 ring-emerald-500/20"
-                  : "bg-white hover:bg-slate-50 text-slate-700 border-slate-300"
-              }`}
-              title="Copy the public self-onboarding registration link to text or email to customers"
-            >
-              {copiedLink ? (
-                <>
-                  <Check className="h-4 w-4 text-emerald-600" />
-                  <span className="font-semibold text-emerald-700">Link Copied!</span>
-                </>
-              ) : (
-                <>
-                  <LinkIcon className="h-4 w-4 text-blue-600" />
-                  <span>Copy Onboarding Link</span>
-                </>
-              )}
-            </button>
-
-            {/* Desktop Add Button */}
-            <Link 
-              href="/customers/new" 
-              className="hidden md:flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2.5 rounded-xl transition-colors shadow-lg shadow-blue-600/20 text-sm"
-            >
-              <Plus className="h-4 w-4" />
-              Add Customer
-            </Link>
-          </div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-2.5">
+            <Building2 className="h-7 w-7 text-blue-600" />
+            Customers
+          </h1>
+          <p className="text-slate-500 mt-1 text-sm md:text-base">
+            Manage client accounts, review self-onboarding applications, and view history.
+          </p>
         </div>
+        
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {/* Copy Onboarding Link Button */}
+          <button
+            onClick={handleCopyOnboardLink}
+            type="button"
+            className={`flex items-center justify-center gap-2 font-medium px-4 py-2.5 rounded-xl border transition-all text-sm shadow-xs cursor-pointer ${
+              copiedLink 
+                ? "bg-emerald-50 text-emerald-700 border-emerald-300 ring-2 ring-emerald-500/20"
+                : "bg-white hover:bg-slate-50 text-slate-700 border-slate-300"
+            }`}
+            title="Copy the public self-onboarding registration link to text or email to customers"
+          >
+            {copiedLink ? (
+              <>
+                <Check className="h-4 w-4 text-emerald-600" />
+                <span className="font-semibold text-emerald-700">Link Copied!</span>
+              </>
+            ) : (
+              <>
+                <LinkIcon className="h-4 w-4 text-blue-600" />
+                <span>Copy Onboarding Link</span>
+              </>
+            )}
+          </button>
 
+          {/* Add Customer Button */}
+          <Link 
+            href="/customers/new" 
+            className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2.5 rounded-xl transition-all shadow-md shadow-blue-600/20 text-sm"
+          >
+            <Plus className="h-4 w-4" />
+            Add Customer
+          </Link>
+        </div>
+      </div>
+
+      {/* Filter Tabs & Search Controls */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-4">
         {/* Status Filter Tabs */}
-        <div className="flex items-center gap-2 mt-4 overflow-x-auto pb-1 scrollbar-none">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
           <button
             onClick={() => setStatusTab("APPROVED")}
             className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
               statusTab === "APPROVED"
                 ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
-                : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >
             Active Customers
@@ -138,14 +144,14 @@ export default function CustomersPage() {
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
               statusTab === "PENDING"
                 ? "bg-amber-600 text-white shadow-md shadow-amber-600/20"
-                : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >
             <Clock className="h-4 w-4" />
             <span>Pending Approvals</span>
             {pendingCount > 0 && (
               <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                statusTab === "PENDING" ? "bg-amber-800 text-white" : "bg-amber-100 text-amber-800"
+                statusTab === "PENDING" ? "bg-amber-800 text-white" : "bg-amber-200 text-amber-800"
               }`}>
                 {pendingCount}
               </span>
@@ -157,7 +163,7 @@ export default function CustomersPage() {
             className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
               statusTab === "REJECTED"
                 ? "bg-slate-800 text-white shadow-md shadow-slate-800/20"
-                : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >
             Rejected
@@ -165,33 +171,31 @@ export default function CustomersPage() {
 
           <button
             onClick={() => setStatusTab("ALL")}
-            className={`px-3 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
+            className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
               statusTab === "ALL"
                 ? "bg-slate-700 text-white"
-                : "bg-white text-slate-500 hover:bg-slate-100 border border-slate-200"
+                : "bg-slate-100 text-slate-500 hover:bg-slate-200"
             }`}
           >
             All
           </button>
         </div>
+
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+          <input 
+            type="text" 
+            placeholder="Search by company, contact, or phone..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all text-sm md:text-base placeholder:text-slate-400"
+          />
+        </div>
       </div>
 
-      <div className="md:bg-white md:border md:border-slate-200 md:rounded-2xl md:shadow-sm overflow-hidden mb-6">
-        {/* Search Bar */}
-        <div className="p-4 border-b border-slate-200 bg-white md:bg-slate-50 sticky top-[125px] md:top-auto z-10">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Search by company, contact, or phone..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 md:py-2.5 bg-slate-100 md:bg-white border-transparent md:border-slate-300 text-slate-900 rounded-xl md:rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all shadow-none md:shadow-sm"
-            />
-          </div>
-        </div>
-
-        {/* List Content */}
+      {/* Customer List Card */}
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
         {loading ? (
           <div className="p-12 flex justify-center bg-white">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -215,7 +219,7 @@ export default function CustomersPage() {
             )}
           </div>
         ) : (
-          <div className="divide-y divide-slate-100 md:divide-slate-200 bg-white">
+          <div className="divide-y divide-slate-100">
             {filteredCustomers.map((customer) => {
               const isPending = customer.status === "PENDING";
               const isRejected = customer.status === "REJECTED";
@@ -228,19 +232,19 @@ export default function CustomersPage() {
                     isPending ? "bg-amber-50/40 hover:bg-amber-50/70" : ""
                   }`}
                 >
-                  <div className={`h-12 w-12 rounded-full md:rounded-xl flex items-center justify-center shrink-0 mr-4 transition-colors ${
+                  <div className={`h-11 w-11 rounded-xl flex items-center justify-center shrink-0 mr-4 transition-colors ${
                     isPending 
                       ? "bg-amber-100 text-amber-700 group-hover:bg-amber-200" 
                       : isRejected 
                       ? "bg-rose-100 text-rose-700 group-hover:bg-rose-200" 
                       : "bg-blue-50 text-blue-600 group-hover:bg-blue-100"
                   }`}>
-                    {isPending ? <Clock className="h-6 w-6" /> : isRejected ? <XCircle className="h-6 w-6" /> : <Building2 className="h-6 w-6" />}
+                    {isPending ? <Clock className="h-5 w-5" /> : isRejected ? <XCircle className="h-5 w-5" /> : <Building2 className="h-5 w-5" />}
                   </div>
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-[17px] md:text-base font-semibold text-slate-900 truncate">
+                      <h3 className="text-base font-semibold text-slate-900 truncate">
                         {customer.companyName}
                       </h3>
                       {isPending && (
@@ -273,7 +277,7 @@ export default function CustomersPage() {
                         Review & Approve
                       </span>
                     )}
-                    <ChevronRight className="h-5 w-5 text-slate-300 md:text-slate-400 group-hover:text-blue-600 transition-colors" />
+                    <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-blue-600 transition-colors" />
                   </div>
                 </Link>
               );
@@ -286,10 +290,10 @@ export default function CustomersPage() {
       <Link 
         href="/customers/new" 
         className="md:hidden fixed bottom-20 right-6 h-14 w-14 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-[0_4px_14px_rgba(37,99,235,0.4)] active:scale-95 transition-transform z-20"
+        aria-label="Add Customer"
       >
         <Plus className="h-6 w-6" />
       </Link>
     </div>
   );
 }
-

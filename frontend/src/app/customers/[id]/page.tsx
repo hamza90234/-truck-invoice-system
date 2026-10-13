@@ -129,8 +129,8 @@ export default function CustomerDetailsPage({ params }: { params: Promise<{ id: 
   return (
     <div className="max-w-5xl mx-auto pb-24 md:pb-8 bg-slate-50 min-h-screen">
       
-      {/* Native Mobile Header (Sticky) */}
-      <div className="sticky top-0 z-20 bg-white md:bg-slate-50 border-b border-slate-200 md:border-none px-4 py-3 md:py-6 flex items-center justify-between">
+      {/* Native Mobile Header (Sticky on mobile, static on desktop) */}
+      <div className="sticky top-0 md:static z-20 bg-white md:bg-transparent border-b border-slate-200 md:border-none px-4 py-3 md:py-6 flex items-center justify-between">
         <Link href="/customers" className="flex items-center text-blue-600 hover:text-blue-700 font-medium">
           <ArrowLeft className="h-5 w-5 md:h-4 md:w-4 mr-1 md:text-slate-500" />
           <span className="hidden md:inline text-slate-500 text-sm hover:text-slate-900">Back to Customers</span>
