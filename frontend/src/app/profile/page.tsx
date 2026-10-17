@@ -6,6 +6,19 @@ import { API_URL } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
+export const DEFAULT_PAYMENT_INSTRUCTIONS = `We accept Zelle, checks, ACH/wire transfers, and EFS/Comchek.
+
+Zelle: 909-500-0909 — AJ Truck Repair and Mobile Road Service.
+
+Please make checks payable to AJ Truck Repair and Mobile Road Service.
+
+Billing Address:
+AJ Truck Repair and Mobile Road Service
+PO Box 51157
+Riverside, CA 92517
+
+Payment is due upon receipt. Vehicle will be released only after payment is received. Storage fees may apply. A mechanic’s lien may be filed in accordance with California law.`;
+
 export default function ProfilePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -27,6 +40,7 @@ export default function ProfilePage() {
     invoiceSettings: "",
     defaultCustomerNote: "",
     defaultWarranty: "30-day labor and 90-day parts warranty from date of repair.",
+    paymentInstructions: DEFAULT_PAYMENT_INSTRUCTIONS,
     defaultLaborRateShop: 120,
     defaultLaborRateRoad: 150,
     password: "",
@@ -61,6 +75,7 @@ export default function ProfilePage() {
         let parsedSettings = {
           defaultCustomerNote: "",
           defaultWarranty: "30-day labor and 90-day parts warranty from date of repair.",
+          paymentInstructions: DEFAULT_PAYMENT_INSTRUCTIONS,
           defaultLaborRateShop: 120,
           defaultLaborRateRoad: 150
         };
@@ -87,10 +102,11 @@ export default function ProfilePage() {
           defaultPaymentTerms: data.defaultPaymentTerms || "Net 30",
           creditCardFeePct: data.creditCardFeePct || 3.00,
           invoiceSettings: data.invoiceSettings || "",
-          defaultCustomerNote: parsedSettings.defaultCustomerNote,
-          defaultWarranty: parsedSettings.defaultWarranty,
-          defaultLaborRateShop: parsedSettings.defaultLaborRateShop,
-          defaultLaborRateRoad: parsedSettings.defaultLaborRateRoad,
+          defaultCustomerNote: parsedSettings.defaultCustomerNote || "",
+          defaultWarranty: parsedSettings.defaultWarranty || "30-day labor and 90-day parts warranty from date of repair.",
+          paymentInstructions: parsedSettings.paymentInstructions || DEFAULT_PAYMENT_INSTRUCTIONS,
+          defaultLaborRateShop: parsedSettings.defaultLaborRateShop || 120,
+          defaultLaborRateRoad: parsedSettings.defaultLaborRateRoad || 150,
           password: "",
         });
       } catch (err: any) {
@@ -118,6 +134,7 @@ export default function ProfilePage() {
       const settingsObj = {
         defaultCustomerNote: formData.defaultCustomerNote,
         defaultWarranty: formData.defaultWarranty,
+        paymentInstructions: formData.paymentInstructions,
         defaultLaborRateShop: Number(formData.defaultLaborRateShop),
         defaultLaborRateRoad: Number(formData.defaultLaborRateRoad)
       };
@@ -298,8 +315,29 @@ export default function ProfilePage() {
           </div>
 
           <div className="mt-6">
-            <label className="block text-sm font-medium text-slate-700 mb-2">Default Warranty Terms</label>
-            <textarea name="defaultWarranty" rows={3} value={formData.defaultWarranty} onChange={handleChange} placeholder="e.g. 30-day labor and 90-day parts warranty from date of repair." className="w-full bg-white border border-slate-300 text-slate-900 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm resize-y"></textarea>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-slate-700">
+                Payment Instructions & Remittance Policy (Shows on Invoices & Customer Portal)
+              </label>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, paymentInstructions: DEFAULT_PAYMENT_INSTRUCTIONS })}
+                className="text-xs text-blue-600 hover:text-blue-700 font-semibold underline"
+              >
+                Reset to Default
+              </button>
+            </div>
+            <textarea 
+              name="paymentInstructions" 
+              rows={8} 
+              value={formData.paymentInstructions} 
+              onChange={handleChange} 
+              placeholder="e.g. We accept Zelle, checks..." 
+              className="w-full bg-white border border-slate-300 text-slate-900 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm resize-y font-mono text-xs leading-relaxed"
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              This notice appears at the bottom of printed invoices, email receipts, and the public customer payment link.
+            </p>
           </div>
         </div>
         

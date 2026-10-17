@@ -5,6 +5,7 @@ import { prisma } from '../utils/prisma.js';
 export const getParts = async (req: Request, res: Response): Promise<void> => {
   try {
     const parts = await prisma.part.findMany({
+      include: { vendor: true },
       orderBy: { name: 'asc' }
     });
     res.status(200).json(parts);
@@ -20,6 +21,7 @@ export const getPartById = async (req: Request, res: Response): Promise<void> =>
     const id = req.params.id as string;
     const part = await prisma.part.findUnique({
       where: { id },
+      include: { vendor: true }
     });
 
     if (!part) {
@@ -44,7 +46,8 @@ export const createPart = async (req: Request, res: Response): Promise<void> => 
       purchaseCost,
       sellingPrice,
       stockQuantity,
-      minimumStockLevel
+      minimumStockLevel,
+      vendorId
     } = req.body;
 
     if (!partNumber || !name || purchaseCost === undefined || sellingPrice === undefined) {
@@ -61,14 +64,16 @@ export const createPart = async (req: Request, res: Response): Promise<void> => 
 
     const newPart = await prisma.part.create({
       data: {
-        partNumber,
-        name,
-        description,
+        partNumber: partNumber.trim().toUpperCase(),
+        name: name.trim(),
+        description: description ? description.trim() : null,
         purchaseCost: parseFloat(purchaseCost),
         sellingPrice: parseFloat(sellingPrice),
         stockQuantity: stockQuantity ? parseInt(stockQuantity, 10) : 0,
-        minimumStockLevel: minimumStockLevel ? parseInt(minimumStockLevel, 10) : 5
-      }
+        minimumStockLevel: minimumStockLevel ? parseInt(minimumStockLevel, 10) : 5,
+        vendorId: vendorId || null
+      },
+      include: { vendor: true }
     });
 
     res.status(201).json(newPart);

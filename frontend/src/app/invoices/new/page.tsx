@@ -16,12 +16,14 @@ import {
   AlertTriangle,
   CheckCircle,
   HelpCircle,
+  TrendingUp,
   X
 } from "lucide-react";
 import { API_URL } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
 import SearchableCustomerSelect from "@/app/components/SearchableCustomerSelect";
 import SearchablePartSelect from "@/app/components/SearchablePartSelect";
+import SearchableVehicleSelect from "@/app/components/SearchableVehicleSelect";
 import AiVinScanner from "@/app/components/AiVinScanner";
 
 interface CustomerOption {
@@ -34,13 +36,18 @@ interface CustomerOption {
 
 interface VehicleOption {
   id: string;
-  customerId: string;
+  customerId?: string;
   unitNumber: string | null;
   vin: string;
   make: string | null;
   model: string | null;
   year: number | null;
-  mileage: number | null;
+  licensePlate?: string | null;
+  licensePlateState?: string | null;
+  color?: string | null;
+  equipmentType?: string | null;
+  trailerType?: string | null;
+  mileage?: number | null;
 }
 
 interface PartOption {
@@ -48,6 +55,7 @@ interface PartOption {
   partNumber: string;
   name: string;
   sellingPrice: number;
+  purchaseCost?: number;
   stockQuantity: number;
 }
 
@@ -112,6 +120,7 @@ function InvoiceCreateForm() {
     contactPerson: "",
     phone: "",
     email: "",
+    additionalEmails: "",
     unitNumber: "",
     vin: ""
   });
@@ -159,7 +168,9 @@ function InvoiceCreateForm() {
 
         if (shopRes && shopRes.ok) {
           const shopData = await shopRes.json();
-          if (shopData.defaultTaxRate !== undefined) setTaxRate(shopData.defaultTaxRate.toString());
+          if (shopData.defaultTaxRate !== undefined && Number(shopData.defaultTaxRate) > 0) {
+            setTaxRate(shopData.defaultTaxRate.toString());
+          }
           if (shopData.defaultPaymentTerms) setPaymentTerms(shopData.defaultPaymentTerms);
           if (shopData.creditCardFeePct !== undefined) setCreditCardFeePct(Number(shopData.creditCardFeePct));
           
@@ -253,6 +264,7 @@ function InvoiceCreateForm() {
           contactPerson: newCustomerData.contactPerson.trim() || null,
           phone: newCustomerData.phone.trim() || null,
           email: newCustomerData.email.trim() || null,
+          additionalEmails: newCustomerData.additionalEmails?.trim() || null,
         }),
       });
 
@@ -299,6 +311,7 @@ function InvoiceCreateForm() {
         contactPerson: "",
         phone: "",
         email: "",
+        additionalEmails: "",
         unitNumber: "",
         vin: "",
       });
@@ -408,6 +421,17 @@ function InvoiceCreateForm() {
   const totalAmount = subtotal + taxAmount;
   const cardFeePreview = (totalAmount * (creditCardFeePct || 3)) / 100;
 
+  // Real-time Profit Preview for Shop Owner
+  const partsCostPreview = partItems.reduce((acc, item) => {
+    const qty = parseFloat(item.quantity) || 0;
+    const catalogItem = partsCatalog.find(p => p.id === item.partId);
+    const unitCost = catalogItem ? Number(catalogItem.purchaseCost || 0) : 0;
+    return acc + (qty * unitCost);
+  }, 0);
+  const partsProfitPreview = Math.max(0, partsSubtotal - partsCostPreview);
+  const totalProfitPreview = laborSubtotal + partsProfitPreview;
+  const marginPctPreview = subtotal > 0 ? ((totalProfitPreview / subtotal) * 100).toFixed(1) : "0.0";
+
   // Submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -472,14 +496,23 @@ function InvoiceCreateForm() {
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to create invoice");
+        let errMsg = "Failed to create invoice";
+        try {
+          const data = await res.json();
+          errMsg = data.error || errMsg;
+        } catch {
+          // ignore
+        }
+        throw new Error(errMsg);
       }
 
       const created = await res.json();
       router.push(`/invoices/${created.id}`);
     } catch (err: any) {
-      setError(err.message);
+      const message = err.message === "Failed to fetch"
+        ? "Unable to reach the server. Please verify your backend server is running on port 5000."
+        : (err.message || "An unexpected error occurred.");
+      setError(message);
       setSaving(false);
     }
   };
@@ -562,26 +595,26 @@ function InvoiceCreateForm() {
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Customer&apos;s Vehicle / Truck Unit <span className="text-red-500">*</span>
               </label>
-              <select
-                value={selectedVehicleId}
-                onChange={(e) => setSelectedVehicleId(e.target.value)}
-                disabled={!selectedCustomerId || availableVehicles.length === 0}
-                required
-                className="w-full min-h-[48px] sm:min-h-[44px] px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400 font-semibold transition"
-              >
-                <option value="">
-                  {!selectedCustomerId 
-                    ? "Select a customer first" 
-                    : availableVehicles.length === 0 
-                      ? "No vehicles registered for this customer" 
-                      : "Select Vehicle / Truck Unit..."}
-                </option>
-                {availableVehicles.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    Unit #{v.unitNumber || "N/A"} — {v.year || ""} {v.make || ""} {v.model || ""} (VIN: {v.vin})
-                  </option>
-                ))}
-              </select>
+              <SearchableVehicleSelect
+                vehicles={availableVehicles}
+                selectedVehicleId={selectedVehicleId}
+                customerId={selectedCustomerId}
+                disabled={!selectedCustomerId}
+                onSelectVehicle={(veh: any) => {
+                  if (veh) {
+                    setSelectedVehicleId(veh.id);
+                    if (veh.mileage) setVehicleOdometer(veh.mileage.toString());
+                  } else {
+                    setSelectedVehicleId("");
+                    setVehicleOdometer("");
+                  }
+                }}
+                onAddNewVehicle={() => {
+                  if (selectedCustomerId) {
+                    router.push(`/customers/${selectedCustomerId}/vehicles/new`);
+                  }
+                }}
+              />
               {selectedCustomerId && availableVehicles.length === 0 && (
                 <p className="text-[11px] text-amber-600 mt-1">
                   This customer has no vehicles. <Link href={`/customers/${selectedCustomerId}/vehicles/new`} className="underline font-semibold">Add a vehicle</Link>
@@ -963,6 +996,23 @@ function InvoiceCreateForm() {
                   If customer pays via Credit Card with a {creditCardFeePct}% fee, the surcharge is <strong>${cardFeePreview.toFixed(2)}</strong> (Total: ${(totalAmount + cardFeePreview).toFixed(2)}).
                 </span>
               </div>
+
+              {/* Real-Time Profit Preview for Shop Owner */}
+              <div className="bg-emerald-50/80 border border-emerald-200 p-3 rounded-xl text-xs space-y-1.5 mt-3">
+                <div className="flex items-center justify-between text-emerald-950 font-bold">
+                  <span className="flex items-center gap-1.5">
+                    <TrendingUp className="h-4 w-4 text-emerald-600" />
+                    Estimated Net Profit:
+                  </span>
+                  <span className="text-sm font-black text-emerald-800">
+                    ${totalProfitPreview.toFixed(2)} ({marginPctPreview}%)
+                  </span>
+                </div>
+                <div className="text-[11px] text-emerald-700 flex justify-between pt-1 border-t border-emerald-200/60">
+                  <span>Labor Profit (100%): <strong>${laborSubtotal.toFixed(2)}</strong></span>
+                  <span>Parts Profit: <strong>+${partsProfitPreview.toFixed(2)}</strong></span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1060,15 +1110,27 @@ function InvoiceCreateForm() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Email Address (Optional)</label>
-                <input
-                  type="email"
-                  placeholder="billing@company.com"
-                  value={newCustomerData.email}
-                  onChange={(e) => setNewCustomerData({ ...newCustomerData, email: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-300 focus:border-blue-500 rounded-xl text-base sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Billing Email (Primary)</label>
+                  <input
+                    type="email"
+                    placeholder="billing@company.com"
+                    value={newCustomerData.email}
+                    onChange={(e) => setNewCustomerData({ ...newCustomerData, email: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-300 focus:border-blue-500 rounded-xl text-base sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Additional Emails (Dispatch/AP)</label>
+                  <input
+                    type="text"
+                    placeholder="dispatch@company.com, ap@co.com"
+                    value={newCustomerData.additionalEmails}
+                    onChange={(e) => setNewCustomerData({ ...newCustomerData, additionalEmails: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-300 focus:border-blue-500 rounded-xl text-base sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-xs"
+                  />
+                </div>
               </div>
 
               {/* Initial Vehicle (Optional) */}

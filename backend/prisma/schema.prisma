@@ -35,46 +35,51 @@ model ShopProfile {
 // ==========================================
 
 model Customer {
-  id             String    @id @default(uuid())
-  companyName    String
-  contactPerson  String?
-  phone          String?
-  email          String?
-  billingAddress String?
-  serviceAddress String?
-  usdot          String?
-  mcNumber       String?
-  ein            String?
-  customerType   String?   // e.g., "Fleet", "Owner-Operator"
-  paymentTerms   String?
-  notes          String?
-  status         String    @default("APPROVED") // e.g., "APPROVED", "PENDING", "REJECTED"
-  rejectionReason String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id               String    @id @default(uuid())
+  companyName      String
+  contactPerson    String?
+  phone            String?
+  email            String?
+  additionalEmails String?
+  billingAddress   String?
+  serviceAddress   String?
+  serviceType      String?   // e.g., "IN_SHOP", "ROAD_SERVICE"
+  usdot            String?
+  mcNumber         String?
+  ein              String?
+  customerType     String?   // e.g., "Fleet", "Owner-Operator", "Broker", "Individual"
+  paymentTerms     String?
+  notes            String?
+  status           String    @default("APPROVED") // e.g., "APPROVED", "PENDING", "REJECTED"
+  rejectionReason  String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  vehicles       Vehicle[]
-  invoices       Invoice[]
+  vehicles         Vehicle[]
+  invoices         Invoice[]
 }
 
 model Vehicle {
-  id             String    @id @default(uuid())
-  customerId     String
-  customer       Customer  @relation(fields: [customerId], references: [id])
-  unitNumber     String?
-  vin            String    @unique
-  year           Int?
-  make           String?
-  model          String?
-  engine         String?
-  transmission   String?
-  licensePlate   String?
-  mileage        Int?
-  equipmentType  String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id                String    @id @default(uuid())
+  customerId        String
+  customer          Customer  @relation(fields: [customerId], references: [id])
+  unitNumber        String?
+  vin               String    @unique
+  year              Int?
+  make              String?
+  model             String?
+  engine            String?
+  transmission      String?
+  licensePlate      String?
+  licensePlateState String?
+  color             String?
+  trailerType       String?
+  mileage           Int?
+  equipmentType     String?   // "TRUCK" or "TRAILER"
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
-  invoices       Invoice[]
+  invoices          Invoice[]
 }
 
 // ==========================================
@@ -90,6 +95,8 @@ model Part {
   sellingPrice      Decimal  @db.Decimal(10, 2)
   stockQuantity     Int      @default(0)
   minimumStockLevel Int      @default(5)
+  vendorId          String?
+  vendor            Vendor?  @relation(fields: [vendorId], references: [id])
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -157,6 +164,7 @@ model InvoiceItem {
   quantity    Decimal  @db.Decimal(10, 2) // Hours for labor, count for parts
   rate        Decimal  @db.Decimal(10, 2) // Hourly rate or part price
   total       Decimal  @db.Decimal(10, 2)
+  cost        Decimal? @db.Decimal(10, 2) // Cost of part at invoice time for profit calculation
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -218,6 +226,7 @@ model Vendor {
   updatedAt   DateTime @updatedAt
 
   purchases   VendorPurchase[]
+  parts       Part[]
 }
 
 enum PurchaseStatus {

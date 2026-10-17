@@ -46,35 +46,90 @@ export default function ReportsPage() {
       </div>
 
       {/* Profit & Loss Overview */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-200 bg-slate-50">
-          <h2 className="text-lg font-semibold text-slate-900">Profit & Loss Overview</h2>
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-slate-200 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">Profit & Loss Breakdown</h2>
+            <p className="text-xs text-slate-500 mt-0.5">Itemized labor earnings, vendor parts cost, gross profit & operating margins</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
+              Gross Margin: {pnL?.grossMarginPct ?? 0}%
+            </div>
+            <div className="px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-xs font-bold">
+              Total Invoiced: ${(pnL?.totalBilled || 0).toFixed(2)}
+            </div>
+          </div>
         </div>
-        <div className="p-4 md:p-6 grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
-          <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg">
-            <div className="flex items-center gap-2 text-blue-700 font-semibold mb-1">
-              <TrendingUp className="h-4 w-4" /> Total Revenue
+
+        {/* Primary Financial Pillars */}
+        <div className="p-4 md:p-6 grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 border-b border-slate-100">
+          <div className="p-4 bg-blue-50/70 border border-blue-100 rounded-xl">
+            <div className="flex items-center justify-between text-blue-700 font-semibold text-xs mb-1">
+              <span className="flex items-center gap-1.5"><TrendingUp className="h-4 w-4" /> Labor Revenue</span>
+              <span className="text-[10px] bg-blue-200/60 px-1.5 py-0.2 rounded font-bold">100% Margin</span>
             </div>
-            <div className="text-2xl font-bold text-slate-900">${(pnL?.totalRevenue || 0).toFixed(2)}</div>
+            <div className="text-2xl font-black text-blue-950">${(pnL?.laborRevenue || 0).toFixed(2)}</div>
+            <p className="text-[11px] text-blue-600/80 mt-1">Labor & mobile road calls</p>
           </div>
-          <div className="p-4 bg-orange-50 border border-orange-100 rounded-lg">
-            <div className="flex items-center gap-2 text-orange-700 font-semibold mb-1">
-              <TrendingDown className="h-4 w-4" /> Cost of Parts
+
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+            <div className="flex items-center justify-between text-slate-700 font-semibold text-xs mb-1">
+              <span className="flex items-center gap-1.5"><TrendingUp className="h-4 w-4" /> Parts Sold</span>
+              <span className="text-[10px] bg-slate-200 px-1.5 py-0.2 rounded font-bold">Revenue</span>
             </div>
-            <div className="text-2xl font-bold text-slate-900">${(pnL?.totalCOGS || 0).toFixed(2)}</div>
+            <div className="text-2xl font-black text-slate-900">${(pnL?.partsRevenue || 0).toFixed(2)}</div>
+            <p className="text-[11px] text-slate-500 mt-1">Customer billed parts</p>
           </div>
-          <div className="p-4 bg-red-50 border border-red-100 rounded-lg">
-            <div className="flex items-center gap-2 text-red-700 font-semibold mb-1">
-              <TrendingDown className="h-4 w-4" /> Operating Expenses
+
+          <div className="p-4 bg-orange-50/70 border border-orange-100 rounded-xl">
+            <div className="flex items-center justify-between text-orange-700 font-semibold text-xs mb-1">
+              <span className="flex items-center gap-1.5"><TrendingDown className="h-4 w-4" /> Parts COGS</span>
+              <span className="text-[10px] bg-orange-200/60 px-1.5 py-0.2 rounded font-bold">Vendor Cost</span>
             </div>
-            <div className="text-2xl font-bold text-slate-900">${(pnL?.totalExpenses || 0).toFixed(2)}</div>
+            <div className="text-2xl font-black text-orange-950">${(pnL?.partsCOGS || 0).toFixed(2)}</div>
+            <p className="text-[11px] text-orange-600/80 mt-1">Purchase cost of parts sold</p>
           </div>
-          <div className="p-4 bg-green-50 border border-green-200 rounded-lg shadow-sm">
-            <div className="flex items-center gap-2 text-green-700 font-semibold mb-1">
-              <DollarSign className="h-4 w-4" /> Net Profit
+
+          <div className="p-4 bg-emerald-50/70 border border-emerald-100 rounded-xl">
+            <div className="flex items-center justify-between text-emerald-700 font-semibold text-xs mb-1">
+              <span className="flex items-center gap-1.5"><DollarSign className="h-4 w-4" /> Parts Profit</span>
+              <span className="text-[10px] bg-emerald-200/60 px-1.5 py-0.2 rounded font-bold">Net Markup</span>
             </div>
-            <div className="text-3xl font-black text-green-700">${(pnL?.netProfit || 0).toFixed(2)}</div>
+            <div className="text-2xl font-black text-emerald-950">${(pnL?.partsGrossProfit || 0).toFixed(2)}</div>
+            <p className="text-[11px] text-emerald-600/80 mt-1">Parts sold minus parts cost</p>
           </div>
+        </div>
+
+        {/* Secondary Bottom Line Metrics */}
+        <div className="p-4 md:p-6 grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-50/40">
+          <div className="p-4 bg-white border border-slate-200 rounded-xl">
+            <div className="text-xs font-semibold text-slate-500 mb-1">Total Gross Profit</div>
+            <div className="text-2xl font-black text-slate-900">${(pnL?.totalGrossProfit || 0).toFixed(2)}</div>
+            <p className="text-[11px] text-slate-400 mt-1">Labor ($_{(pnL?.laborRevenue || 0).toFixed(2)}) + Parts Profit ($_{(pnL?.partsGrossProfit || 0).toFixed(2)})</p>
+          </div>
+
+          <div className="p-4 bg-white border border-slate-200 rounded-xl">
+            <div className="text-xs font-semibold text-rose-600 mb-1">Operating Expenses</div>
+            <div className="text-2xl font-black text-rose-900">${(pnL?.totalExpenses || 0).toFixed(2)}</div>
+            <p className="text-[11px] text-slate-400 mt-1">Shop supplies, fuel, rent, utilities</p>
+          </div>
+
+          <div className="p-4 bg-emerald-500 text-white rounded-xl shadow-sm">
+            <div className="text-xs font-semibold text-emerald-100 mb-1">Net Operating Profit</div>
+            <div className="text-3xl font-black">${(pnL?.netProfit || 0).toFixed(2)}</div>
+            <p className="text-[11px] text-emerald-100 mt-1">Gross profit minus operating expenses</p>
+          </div>
+        </div>
+
+        {/* Formula Explainer */}
+        <div className="p-4 bg-slate-50 border-t border-slate-200 text-xs text-slate-600 flex items-center justify-between flex-wrap gap-2">
+          <span>
+            💡 <strong>Accurate Breakdown:</strong> Labor carries 0% inventory cost (100% margin). Parts calculate profit dynamically by subtracting vendor purchase cost from billed customer price.
+          </span>
+          <span className="text-[11px] text-slate-500">
+            Cash Collected: ${(pnL?.totalRevenue || 0).toFixed(2)}
+          </span>
         </div>
       </div>
 

@@ -114,12 +114,45 @@ export const getInvoiceById = async (req: Request, res: Response): Promise<void>
       prisma.shopProfile.findFirst()
     ]);
 
-    if (!invoice) {
-      res.status(404).json({ error: 'Invoice not found' });
-      return;
+    // Calculate P&L metrics for the invoice (Internal for shop)
+    let laborRevenue = 0;
+    let partsRevenue = 0;
+    let partsCostTotal = 0;
+
+    for (const item of invoice.items) {
+      const itemTotal = Number(item.total || 0);
+      const qty = Number(item.quantity || 1);
+      if (item.type === 'LABOR') {
+        laborRevenue += itemTotal;
+      } else if (item.type === 'PART') {
+        partsRevenue += itemTotal;
+        const unitCost = item.cost !== null && item.cost !== undefined 
+          ? Number(item.cost) 
+          : Number(item.part?.purchaseCost || 0);
+        partsCostTotal += Number((qty * unitCost).toFixed(2));
+      }
     }
 
-    res.status(200).json({ ...invoice, shopProfile });
+    laborRevenue = Number(laborRevenue.toFixed(2));
+    partsRevenue = Number(partsRevenue.toFixed(2));
+    partsCostTotal = Number(partsCostTotal.toFixed(2));
+    const partsProfit = Number((partsRevenue - partsCostTotal).toFixed(2));
+    const totalProfit = Number((laborRevenue + partsProfit).toFixed(2));
+    const profitMarginPct = Number(invoice.subtotal) > 0 
+      ? Number(((totalProfit / Number(invoice.subtotal)) * 100).toFixed(1)) 
+      : 0;
+
+    const profitBreakdown = {
+      laborRevenue,
+      partsRevenue,
+      partsCostTotal,
+      partsProfit,
+      laborProfit: laborRevenue,
+      totalProfit,
+      profitMarginPct
+    };
+
+    res.status(200).json({ ...invoice, shopProfile, profitBreakdown });
   } catch (error) {
     console.error('Error fetching invoice:', error);
     res.status(500).json({ error: 'Failed to fetch invoice details' });
@@ -155,10 +188,13 @@ export const getPublicInvoice = async (req: Request, res: Response): Promise<voi
               make: true,
               model: true,
               licensePlate: true,
+              licensePlateState: true,
+              color: true,
               mileage: true,
               engine: true,
               transmission: true,
-              equipmentType: true
+              equipmentType: true,
+              trailerType: true
             }
           },
           items: {
@@ -198,7 +234,8 @@ export const getPublicInvoice = async (req: Request, res: Response): Promise<voi
           website: true,
           logoUrl: true,
           taxId: true,
-          creditCardFeePct: true
+          creditCardFeePct: true,
+          invoiceSettings: true
         }
       })
     ]);
@@ -225,7 +262,7 @@ export const createInvoice = async (req: Request, res: Response): Promise<void> 
       date,
       dueDate,
       paymentTerms,
-      taxRate = 0,
+      taxRate,
       notes,
       warrantyInfo,
       status = 'UNPAID',
@@ -254,6 +291,13 @@ export const createInvoice = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
+    // Look up part purchase costs for profit tracking
+    const partIds = items.filter((i: any) => i.type === 'PART' && i.partId).map((i: any) => i.partId);
+    const existingParts = partIds.length > 0 
+      ? await prisma.part.findMany({ where: { id: { in: partIds } }, select: { id: true, purchaseCost: true } })
+      : [];
+    const partCostMap = new Map(existingParts.map(p => [p.id, Number(p.purchaseCost || 0)]));
+
     // Calculate line totals and subtotal
     let subtotal = 0;
     let partsSubtotal = 0;
@@ -263,8 +307,10 @@ export const createInvoice = async (req: Request, res: Response): Promise<void> 
       const itemTotal = Number((qty * rate).toFixed(2));
       subtotal += itemTotal;
       
+      let itemCost: number | null = null;
       if (item.type === 'PART') {
         partsSubtotal += itemTotal;
+        itemCost = item.cost !== undefined ? Number(item.cost) : (item.partId ? (partCostMap.get(item.partId) || 0) : 0);
       }
 
       return {
@@ -273,13 +319,22 @@ export const createInvoice = async (req: Request, res: Response): Promise<void> 
         description: item.description || '',
         quantity: qty,
         rate: rate,
-        total: itemTotal
+        total: itemTotal,
+        cost: itemCost
       };
     });
 
     subtotal = Number(subtotal.toFixed(2));
     partsSubtotal = Number(partsSubtotal.toFixed(2));
-    const taxRateNum = parseFloat(taxRate) || 0;
+    let taxRateNum = 8.25;
+    if (taxRate !== undefined && taxRate !== null && !isNaN(parseFloat(taxRate))) {
+      taxRateNum = parseFloat(taxRate);
+    } else {
+      const shop = await prisma.shopProfile.findFirst({ select: { defaultTaxRate: true } });
+      if (shop?.defaultTaxRate && Number(shop.defaultTaxRate) > 0) {
+        taxRateNum = Number(shop.defaultTaxRate);
+      }
+    }
     // Apply tax ONLY to parts (labor is tax-exempt)
     const taxAmount = Number(((partsSubtotal * taxRateNum) / 100).toFixed(2));
     const feeAmount = Number(parseFloat(creditCardFee).toFixed(2));
@@ -349,6 +404,8 @@ export const updateInvoice = async (req: Request, res: Response): Promise<void> 
   try {
     const id = req.params.id as string;
     const {
+      customerId,
+      vehicleId,
       invoiceNumber,
       date,
       dueDate,
@@ -387,6 +444,13 @@ export const updateInvoice = async (req: Request, res: Response): Promise<void> 
       }
     }
 
+    // Look up part purchase costs for profit tracking
+    const partIds = items.filter((i: any) => i.type === 'PART' && i.partId).map((i: any) => i.partId);
+    const existingParts = partIds.length > 0 
+      ? await prisma.part.findMany({ where: { id: { in: partIds } }, select: { id: true, purchaseCost: true } })
+      : [];
+    const partCostMap = new Map(existingParts.map(p => [p.id, Number(p.purchaseCost || 0)]));
+
     // Calculate line totals and subtotal
     let subtotal = 0;
     let partsSubtotal = 0;
@@ -396,8 +460,10 @@ export const updateInvoice = async (req: Request, res: Response): Promise<void> 
       const itemTotal = Number((qty * rate).toFixed(2));
       subtotal += itemTotal;
       
+      let itemCost: number | null = null;
       if (item.type === 'PART') {
         partsSubtotal += itemTotal;
+        itemCost = item.cost !== undefined ? Number(item.cost) : (item.partId ? (partCostMap.get(item.partId) || 0) : 0);
       }
 
       return {
@@ -406,15 +472,21 @@ export const updateInvoice = async (req: Request, res: Response): Promise<void> 
         description: item.description || '',
         quantity: qty,
         rate: rate,
-        total: itemTotal
+        total: itemTotal,
+        cost: itemCost
       };
     });
 
     subtotal = Number(subtotal.toFixed(2));
     partsSubtotal = Number(partsSubtotal.toFixed(2));
-    const taxRateNum = parseFloat(taxRate) || 0;
-    // Apply tax ONLY to parts (labor is tax-exempt)
-    const taxAmount = Number(((partsSubtotal * taxRateNum) / 100).toFixed(2));
+    let taxAmount = 0;
+    if (taxRate !== undefined && taxRate !== null && !isNaN(parseFloat(taxRate))) {
+      const taxRateNum = parseFloat(taxRate);
+      taxAmount = Number(((partsSubtotal * taxRateNum) / 100).toFixed(2));
+    } else {
+      // If taxRate was omitted, retain the invoice's existing tax amount
+      taxAmount = Number(existingInvoice.taxAmount);
+    }
     
     // Check if new fee provided, otherwise use existing
     const feeAmount = creditCardFee !== undefined 
@@ -460,6 +532,8 @@ export const updateInvoice = async (req: Request, res: Response): Promise<void> 
       const updatedInvoice = await tx.invoice.update({
         where: { id },
         data: {
+          ...(customerId ? { customerId } : {}),
+          ...(vehicleId ? { vehicleId } : {}),
           invoiceNumber: invoiceNumber || existingInvoice.invoiceNumber,
           date: date ? new Date(date) : existingInvoice.date,
           dueDate: dueDate ? new Date(dueDate) : existingInvoice.dueDate,

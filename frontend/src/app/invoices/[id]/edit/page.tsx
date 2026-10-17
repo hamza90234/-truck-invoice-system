@@ -15,17 +15,37 @@ import {
   AlertTriangle,
   CheckCircle,
   HelpCircle,
+  TrendingUp,
   Truck
 } from "lucide-react";
 import { API_URL } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
 import SearchablePartSelect from "@/app/components/SearchablePartSelect";
+import SearchableCustomerSelect from "@/app/components/SearchableCustomerSelect";
+import SearchableVehicleSelect from "@/app/components/SearchableVehicleSelect";
+
+export interface VehicleOption {
+  id: string;
+  customerId?: string;
+  unitNumber: string | null;
+  vin: string;
+  make: string | null;
+  model: string | null;
+  year: number | null;
+  licensePlate?: string | null;
+  licensePlateState?: string | null;
+  color?: string | null;
+  equipmentType?: string | null;
+  trailerType?: string | null;
+  mileage?: number | null;
+}
 
 interface PartOption {
   id: string;
   partNumber: string;
   name: string;
   sellingPrice: number;
+  purchaseCost?: number;
   stockQuantity: number;
 }
 
@@ -55,6 +75,10 @@ export default function EditInvoicePage({ params }: { params: Promise<{ id: stri
 
   const [invoice, setInvoice] = useState<any>(null);
   const [partsCatalog, setPartsCatalog] = useState<PartOption[]>([]);
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [availableVehicles, setAvailableVehicles] = useState<VehicleOption[]>([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState("");
+  const [selectedVehicleId, setSelectedVehicleId] = useState("");
 
   // Form Fields
   const [invoiceNumber, setInvoiceNumber] = useState("");
@@ -75,18 +99,34 @@ export default function EditInvoicePage({ params }: { params: Promise<{ id: stri
     const fetchData = async () => {
       try {
         setLoadingData(true);
-        const [invRes, partsRes] = await Promise.all([
+        const [invRes, partsRes, custRes] = await Promise.all([
           apiFetch(`${API_URL}/api/invoices/${id}`),
-          apiFetch(`${API_URL}/api/parts`)
+          apiFetch(`${API_URL}/api/parts`),
+          apiFetch(`${API_URL}/api/customers?status=APPROVED`).catch(() => null)
         ]);
 
         if (!invRes.ok) throw new Error("Failed to load invoice");
         const invData = await invRes.json();
         setInvoice(invData);
+        setSelectedCustomerId(invData.customerId || "");
+        setSelectedVehicleId(invData.vehicleId || "");
 
         if (partsRes.ok) {
           const partsList = await partsRes.json();
           setPartsCatalog(partsList);
+        }
+
+        if (custRes && custRes.ok) {
+          const custList = await custRes.json();
+          setCustomers(custList);
+          const found = custList.find((c: any) => c.id === invData.customerId);
+          if (found && found.vehicles && found.vehicles.length > 0) {
+            setAvailableVehicles(found.vehicles);
+          } else if (invData.vehicle) {
+            setAvailableVehicles([invData.vehicle]);
+          }
+        } else if (invData.vehicle) {
+          setAvailableVehicles([invData.vehicle]);
         }
 
         // Initialize state
@@ -100,12 +140,21 @@ export default function EditInvoicePage({ params }: { params: Promise<{ id: stri
         setVehicleOdometer(invData.vehicleOdometer?.toString() || "");
         setIsEstimate(Boolean(invData.isEstimate));
 
-        // Determine effective tax rate from subtotal and taxAmount
-        if (Number(invData.subtotal) > 0 && Number(invData.taxAmount) > 0) {
+        // Determine effective tax rate from parts subtotal and taxAmount
+        const partsSub = invData.items
+          ?.filter((i: any) => i.type === "PART")
+          ?.reduce((acc: number, i: any) => acc + (Number(i.quantity || 1) * Number(i.rate || 0)), 0) || 0;
+
+        if (partsSub > 0 && Number(invData.taxAmount) > 0) {
+          const computedRate = ((Number(invData.taxAmount) / partsSub) * 100).toFixed(2);
+          setTaxRate(computedRate);
+        } else if (Number(invData.subtotal) > 0 && Number(invData.taxAmount) > 0) {
           const computedRate = ((Number(invData.taxAmount) / Number(invData.subtotal)) * 100).toFixed(2);
           setTaxRate(computedRate);
-        } else if (invData.shopProfile?.defaultTaxRate !== undefined) {
+        } else if (invData.shopProfile?.defaultTaxRate !== undefined && Number(invData.shopProfile.defaultTaxRate) > 0) {
           setTaxRate(invData.shopProfile.defaultTaxRate.toString());
+        } else {
+          setTaxRate("8.25");
         }
 
         // Split items
@@ -265,6 +314,17 @@ export default function EditInvoicePage({ params }: { params: Promise<{ id: stri
   const taxAmount = (partsSubtotal * taxRateNum) / 100;
   const totalAmount = subtotal + taxAmount;
 
+  // Real-time Profit Preview for Shop Owner
+  const partsCostPreview = partItems.reduce((acc, item) => {
+    const qty = parseFloat(item.quantity) || 0;
+    const catalogItem = partsCatalog.find(p => p.id === item.partId);
+    const unitCost = catalogItem ? Number(catalogItem.purchaseCost || 0) : 0;
+    return acc + (qty * unitCost);
+  }, 0);
+  const partsProfitPreview = Math.max(0, partsSubtotal - partsCostPreview);
+  const totalProfitPreview = laborSubtotal + partsProfitPreview;
+  const marginPctPreview = subtotal > 0 ? ((totalProfitPreview / subtotal) * 100).toFixed(1) : "0.0";
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -297,6 +357,8 @@ export default function EditInvoicePage({ params }: { params: Promise<{ id: stri
 
     try {
       const payload = {
+        customerId: selectedCustomerId,
+        vehicleId: selectedVehicleId,
         invoiceNumber: invoiceNumber.trim(),
         date: invoiceDate,
         dueDate: dueDate || null,
@@ -317,13 +379,22 @@ export default function EditInvoicePage({ params }: { params: Promise<{ id: stri
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to update invoice");
+        let errMsg = "Failed to update invoice";
+        try {
+          const data = await res.json();
+          errMsg = data.error || errMsg;
+        } catch {
+          // ignore
+        }
+        throw new Error(errMsg);
       }
 
       router.push(`/invoices/${id}`);
     } catch (err: any) {
-      setError(err.message);
+      const message = err.message === "Failed to fetch"
+        ? "Unable to reach the server. Please verify your backend server is running on port 5000."
+        : (err.message || "An unexpected error occurred.");
+      setError(message);
       setSaving(false);
     }
   };
@@ -367,19 +438,60 @@ export default function EditInvoicePage({ params }: { params: Promise<{ id: stri
           </div>
         )}
 
-        {/* Customer & Vehicle Display */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-          <div>
-            <span className="font-bold text-slate-400 uppercase tracking-wider block text-[10px]">Customer</span>
-            <span className="font-bold text-slate-900 text-sm block mt-0.5">{invoice?.customer?.companyName}</span>
-            <span className="text-slate-500">{invoice?.customer?.contactPerson}</span>
+        {/* Customer & Vehicle Select (Editable in case the wrong unit was chosen!) */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <Truck className="h-4 w-4 text-amber-600" />
+              Customer & Equipment Unit
+            </h2>
+            <span className="text-[11px] text-slate-500 hidden sm:inline">You can switch vehicle or customer if assigned incorrectly</span>
           </div>
-          <div>
-            <span className="font-bold text-slate-400 uppercase tracking-wider block text-[10px]">Vehicle</span>
-            <span className="font-bold text-slate-900 text-sm block mt-0.5">
-              Unit #{invoice?.vehicle?.unitNumber || "N/A"} — {invoice?.vehicle?.year} {invoice?.vehicle?.make} {invoice?.vehicle?.model}
-            </span>
-            <span className="text-slate-500 font-mono text-[11px]">VIN: {invoice?.vehicle?.vin}</span>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Customer Account</label>
+              <SearchableCustomerSelect
+                customers={customers}
+                value={selectedCustomerId}
+                onChange={(custId) => {
+                  setSelectedCustomerId(custId);
+                  const found = customers.find((c: any) => c.id === custId);
+                  if (found && found.vehicles && found.vehicles.length > 0) {
+                    setAvailableVehicles(found.vehicles);
+                    setSelectedVehicleId(found.vehicles[0].id);
+                  } else {
+                    setAvailableVehicles([]);
+                    setSelectedVehicleId("");
+                  }
+                }}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Assigned Vehicle / Unit <span className="text-red-500">*</span>
+              </label>
+              <SearchableVehicleSelect
+                vehicles={availableVehicles}
+                selectedVehicleId={selectedVehicleId}
+                customerId={selectedCustomerId}
+                disabled={!selectedCustomerId || availableVehicles.length === 0}
+                onSelectVehicle={(veh: any) => {
+                  if (veh) {
+                    setSelectedVehicleId(veh.id);
+                    if (veh.mileage && !vehicleOdometer) setVehicleOdometer(veh.mileage.toString());
+                  } else {
+                    setSelectedVehicleId("");
+                  }
+                }}
+                onAddNewVehicle={() => {
+                  if (selectedCustomerId) {
+                    router.push(`/customers/${selectedCustomerId}/vehicles/new`);
+                  }
+                }}
+              />
+            </div>
           </div>
         </div>
 
@@ -716,6 +828,23 @@ export default function EditInvoicePage({ params }: { params: Promise<{ id: stri
                   <span>-${Number(invoice.amountPaid).toFixed(2)}</span>
                 </div>
               )}
+
+              {/* Real-Time Profit Preview for Shop Owner */}
+              <div className="bg-emerald-50/80 border border-emerald-200 p-3 rounded-xl text-xs space-y-1.5 mt-3">
+                <div className="flex items-center justify-between text-emerald-950 font-bold">
+                  <span className="flex items-center gap-1.5">
+                    <TrendingUp className="h-4 w-4 text-emerald-600" />
+                    Estimated Net Profit:
+                  </span>
+                  <span className="text-sm font-black text-emerald-800">
+                    ${totalProfitPreview.toFixed(2)} ({marginPctPreview}%)
+                  </span>
+                </div>
+                <div className="text-[11px] text-emerald-700 flex justify-between pt-1 border-t border-emerald-200/60">
+                  <span>Labor Profit (100%): <strong>${laborSubtotal.toFixed(2)}</strong></span>
+                  <span>Parts Profit: <strong>+${partsProfitPreview.toFixed(2)}</strong></span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

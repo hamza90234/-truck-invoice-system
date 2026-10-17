@@ -10,13 +10,27 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Public routes that don't need login
-    if (pathname === "/login" || pathname === "/setup" || pathname.startsWith("/i/")) {
+    if (
+      pathname === "/login" || 
+      pathname === "/setup" || 
+      pathname === "/onboard" || 
+      pathname.startsWith("/onboard/") || 
+      pathname.startsWith("/i/")
+    ) {
       setAuthorized(true);
       return;
     }
 
     const token = localStorage.getItem("token");
     if (!token) {
+      // If a customer was sent an internal invoice link like /invoices/:id without being logged in,
+      // seamlessly redirect them to the public view /i/:id so they never see a login prompt!
+      const invoiceMatch = pathname.match(/^\/invoices\/([^/]+)$/);
+      if (invoiceMatch && invoiceMatch[1] !== "new") {
+        router.replace(`/i/${invoiceMatch[1]}`);
+        return;
+      }
+
       setAuthorized(false);
       router.push("/login");
     } else {

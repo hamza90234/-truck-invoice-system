@@ -345,11 +345,29 @@ export default function CustomerDetailsPage({ params }: { params: Promise<{ id: 
 
                 {customer.email && (
                   <div>
-                    <div className="text-xs text-slate-500 mb-1">Email</div>
+                    <div className="text-xs text-slate-500 mb-1">Billing Email (Primary)</div>
                     <a href={`mailto:${customer.email}`} className="flex items-center gap-2 font-medium text-blue-600 text-[15px] hover:underline">
                       <Mail className="h-4 w-4 shrink-0" />
                       <span className="break-all">{customer.email}</span>
                     </a>
+                  </div>
+                )}
+
+                {customer.additionalEmails && (
+                  <div>
+                    <div className="text-xs text-slate-500 mb-1">Additional / Dispatch Emails</div>
+                    <div className="space-y-1.5">
+                      {customer.additionalEmails.split(",").map((em: string, idx: number) => {
+                        const clean = em.trim();
+                        if (!clean) return null;
+                        return (
+                          <a key={idx} href={`mailto:${clean}`} className="flex items-center gap-2 font-medium text-blue-600 text-sm hover:underline">
+                            <Mail className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                            <span className="break-all">{clean}</span>
+                          </a>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
@@ -474,7 +492,9 @@ export default function CustomerDetailsPage({ params }: { params: Promise<{ id: 
                         {vehicle.licensePlate && (
                           <div className="flex flex-col">
                             <span className="text-slate-400 text-xs uppercase tracking-wider">License</span>
-                            <span className="text-slate-700 font-medium">{vehicle.licensePlate}</span>
+                            <span className="text-slate-700 font-medium">
+                              {vehicle.licensePlate} {vehicle.licensePlateState ? `(${vehicle.licensePlateState})` : "(CA)"}
+                            </span>
                           </div>
                         )}
                         {vehicle.mileage && (

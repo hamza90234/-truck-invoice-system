@@ -97,19 +97,25 @@ export const onboardCustomer = async (req: Request, res: Response): Promise<void
       contactPerson,
       phone,
       email,
+      additionalEmails,
       billingAddress,
       serviceAddress,
+      serviceType,
+      customerType,
       usdot,
       mcNumber,
       ein,
-      notes,
       // Vehicle details if provided
       unitNumber,
       vin,
       year,
       make,
       model,
-      licensePlate
+      licensePlate,
+      licensePlateState,
+      color,
+      trailerType,
+      equipmentType
     } = req.body;
 
     if (!companyName || !phone) {
@@ -124,12 +130,14 @@ export const onboardCustomer = async (req: Request, res: Response): Promise<void
         contactPerson: contactPerson?.trim() || null,
         phone: phone.trim(),
         email: email?.trim() || null,
+        additionalEmails: additionalEmails?.trim() || null,
         billingAddress: billingAddress?.trim() || null,
         serviceAddress: serviceAddress?.trim() || null,
+        serviceType: serviceType?.trim() || 'IN_SHOP',
+        customerType: customerType?.trim() || 'Fleet',
         usdot: usdot?.trim() || null,
         mcNumber: mcNumber?.trim() || null,
         ein: ein?.trim() || null,
-        notes: notes?.trim() || null,
         status: 'PENDING',
       } as any
     });
@@ -158,6 +166,10 @@ export const onboardCustomer = async (req: Request, res: Response): Promise<void
               ...(make ? { make: make.trim() } : {}),
               ...(model ? { model: model.trim() } : {}),
               ...(licensePlate ? { licensePlate: licensePlate.trim().toUpperCase() } : {}),
+              ...(licensePlateState ? { licensePlateState: licensePlateState.trim().toUpperCase() } : {}),
+              ...(color ? { color: color.trim() } : {}),
+              ...(trailerType ? { trailerType: trailerType.trim() } : {}),
+              ...(equipmentType ? { equipmentType } : {}),
             }
           });
         } else {
@@ -171,6 +183,10 @@ export const onboardCustomer = async (req: Request, res: Response): Promise<void
               make: make?.trim() || null,
               model: model?.trim() || null,
               licensePlate: licensePlate?.trim()?.toUpperCase() || null,
+              licensePlateState: licensePlateState?.trim()?.toUpperCase() || null,
+              color: color?.trim() || null,
+              trailerType: trailerType?.trim() || null,
+              equipmentType: equipmentType || 'TRUCK'
             }
           });
         }
@@ -284,8 +300,10 @@ export const createCustomer = async (req: Request, res: Response): Promise<void>
       contactPerson,
       phone,
       email,
+      additionalEmails,
       billingAddress,
       serviceAddress,
+      serviceType,
       usdot,
       mcNumber,
       ein,
@@ -306,8 +324,10 @@ export const createCustomer = async (req: Request, res: Response): Promise<void>
         contactPerson,
         phone,
         email,
+        additionalEmails,
         billingAddress,
         serviceAddress,
+        serviceType,
         usdot,
         mcNumber,
         ein,
