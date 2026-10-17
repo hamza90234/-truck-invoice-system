@@ -114,6 +114,11 @@ export const getInvoiceById = async (req: Request, res: Response): Promise<void>
       prisma.shopProfile.findFirst()
     ]);
 
+    if (!invoice) {
+      res.status(404).json({ error: 'Invoice not found' });
+      return;
+    }
+
     // Calculate P&L metrics for the invoice (Internal for shop)
     let laborRevenue = 0;
     let partsRevenue = 0;
